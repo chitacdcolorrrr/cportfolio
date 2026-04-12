@@ -1,0 +1,38 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.background::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('../images/loved_background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(0.9375rem);
+    transform: scale(1.05); /* Slightly scale the image to avoid edge artifacts */
+    transition: filter 1.2s ease, transform 1.2s ease;
+}
+
+body.loaded .background::before {
+    filter: blur(0);
+    transform: scale(1); /* Reset scale to normal */
+}
