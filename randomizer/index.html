@@ -1,0 +1,2487 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="description" content="一卦定选：带有六爻与八卦文化意象的公平随机选择器。">
+<meta name="application-name" content="一卦定选">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src 'none'; media-src 'none'; connect-src 'none'; worker-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<link rel="canonical" href="https://tnyh0330.com/randomizer/">
+<title>一卦定选｜随机选择器</title>
+<style>
+:root {
+  color-scheme: light dark;
+  background-color: var(--background) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: light-dark(rgb(255 255 255), rgb(24 24 24));
+  --foreground: light-dark(rgb(26 28 31), rgb(255 255 255));
+  --card: color-mix(in oklab, var(--foreground) 5%, transparent);
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(255 255 255), rgb(45 45 45));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(51 156 255), rgb(131 195 255));
+  --primary-foreground: light-dark(rgb(255 255 255), rgb(13 13 13));
+  --secondary: light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: light-dark(
+    rgb(26 28 31 / 49.4%),
+    rgb(255 255 255 / 49.8%)
+  );
+  --accent: light-dark(rgb(229 242 255), rgb(13 39 63));
+  --accent-foreground: var(--primary);
+  --destructive: light-dark(rgb(226 85 7), rgb(255 133 73));
+  --border: light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%));
+  --input: light-dark(
+    rgb(26 28 31 / 11.8%),
+    color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+  );
+  --ring: light-dark(rgb(51 156 255), rgb(131 195 255 / 76%));
+  --font-size-base: 14px;
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, "Segoe UI", sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --radius: 12.5px;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 17 17'%3E%3Cpath d='M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z'/%3E%3C/svg%3E");
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+  --color-background-primary: var(--background);
+  --color-text-primary: var(--foreground);
+  --color-border-secondary: var(--border);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html > body {
+  margin: 0;
+  padding: 5px;
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: pointer;
+  font-weight: var(--viz-font-weight-medium);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive > .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align="right"]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align="center"]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: superellipse(1.5);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+#widget > :not(.card) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls > .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls > .form-label > :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type="file"] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type="file"]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type="file"]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type="color"] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type="color"]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: superellipse(1.5);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: superellipse(1.5);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type="checkbox"] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: superellipse(1.5);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type="checkbox"]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type="checkbox"]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: "";
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type="radio"]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: "";
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+    [aria-pressed="true"],
+    [aria-selected="true"],
+    .is-selected
+  ) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed="true"], [aria-selected="true"], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget > svg {
+  width: 100%;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html > body {
+  min-height: 100%;
+  padding: clamp(12px, 3vw, 24px);
+  background: var(--background) !important;
+}
+</style>
+</head>
+<body>
+<div id="mystic-randomizer-a91f">
+  <style>
+    #mystic-randomizer-a91f {
+      width: 100%;
+      max-inline-size: 736px;
+      margin-inline: auto;
+      --background: light-dark(rgb(244 240 230), rgb(22 27 24));
+      --foreground: light-dark(rgb(35 55 50), rgb(232 225 210));
+      --card: light-dark(rgb(250 247 238 / 96%), rgb(29 36 32 / 96%));
+      --card-foreground: var(--foreground);
+      --popover: light-dark(rgb(250 247 238), rgb(34 42 37));
+      --popover-foreground: var(--foreground);
+      --primary: light-dark(rgb(155 61 50), rgb(203 103 88));
+      --primary-foreground: light-dark(rgb(255 248 235), rgb(30 29 25));
+      --secondary: light-dark(rgb(242 237 224 / 96%), rgb(36 45 40 / 96%));
+      --secondary-foreground: var(--foreground);
+      --muted: light-dark(rgb(231 224 209), rgb(41 50 45));
+      --muted-foreground: light-dark(rgb(102 99 89), rgb(174 174 162));
+      --accent: light-dark(rgb(220 229 218), rgb(40 58 49));
+      --accent-foreground: light-dark(rgb(52 92 75), rgb(178 207 190));
+      --destructive: light-dark(rgb(164 49 43), rgb(235 128 110));
+      --border: light-dark(rgb(63 71 58 / 24%), rgb(231 222 204 / 20%));
+      --input: light-dark(rgb(63 71 58 / 38%), rgb(231 222 204 / 30%));
+      --ring: light-dark(rgb(155 61 50), rgb(203 103 88));
+      --mystic-line-soft: var(--border);
+      --mystic-line-strong: light-dark(
+        rgb(55 69 57 / 44%),
+        rgb(231 222 204 / 36%)
+      );
+      color: var(--foreground);
+    }
+
+    #mystic-randomizer-a91f * {
+      box-sizing: border-box;
+    }
+
+    #mystic-randomizer-a91f .mystic-stack {
+      display: grid;
+      gap: 1rem;
+    }
+
+    #mystic-randomizer-a91f .mystic-stagebar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-block-end: 1rem;
+      padding-block: 0.72rem;
+      border-block: 1px solid var(--mystic-line-soft);
+      color: var(--muted-foreground);
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      letter-spacing: 0.08em;
+    }
+
+    #mystic-randomizer-a91f .mystic-stagebar [aria-current="step"] {
+      color: var(--foreground);
+      font-weight: 500;
+    }
+
+    #mystic-randomizer-a91f .mystic-stagebar [aria-current="step"]::before {
+      content: "◆";
+      margin-inline-end: 0.35rem;
+      color: var(--primary);
+    }
+
+    #mystic-randomizer-a91f .mystic-stage-short {
+      display: none;
+    }
+
+    #mystic-randomizer-a91f .mystic-stage-divider {
+      position: relative;
+      inline-size: 2rem;
+      block-size: 1px;
+      background: var(--mystic-line-strong);
+    }
+
+    #mystic-randomizer-a91f .mystic-stage-divider::after {
+      content: "";
+      position: absolute;
+      inset-block-start: 50%;
+      inset-inline-start: 50%;
+      inline-size: 0.3rem;
+      block-size: 0.3rem;
+      border: 1px solid var(--primary);
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    #mystic-randomizer-a91f .mystic-form-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(8rem, 0.3fr);
+      gap: 1rem;
+    }
+
+    #mystic-randomizer-a91f .mystic-form-grid > .form-label + .form-label {
+      padding-inline-start: 1rem;
+      border-inline-start: 1px solid var(--mystic-line-soft);
+    }
+
+    #mystic-randomizer-a91f #mr-form > .form-label {
+      padding-block: 1rem;
+      border-block: 1px solid var(--mystic-line-soft);
+    }
+
+    #mystic-randomizer-a91f #mr-form > .mystic-field-meta {
+      padding-block-end: 0.85rem;
+      border-block-end: 1px solid var(--mystic-line-soft);
+    }
+
+    #mystic-randomizer-a91f .mystic-field-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    #mystic-randomizer-a91f textarea.form-control {
+      min-block-size: 13rem;
+      overflow: hidden;
+      resize: none;
+    }
+
+    #mystic-randomizer-a91f .mystic-error:empty,
+    #mystic-randomizer-a91f .mystic-verify-status:empty {
+      display: none;
+    }
+
+    #mystic-randomizer-a91f .mystic-question-summary {
+      padding-block: 0.75rem;
+      border-block: 1px solid var(--mystic-line-soft);
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    #mystic-randomizer-a91f .mystic-oracle-disc {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: min(100%, 19rem);
+      aspect-ratio: 1;
+      margin-inline: auto;
+      color: var(--foreground);
+    }
+
+    #mystic-randomizer-a91f .mystic-oracle-disc::before,
+    #mystic-randomizer-a91f .mystic-oracle-disc::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    #mystic-randomizer-a91f .mystic-oracle-disc::before {
+      inset: 7%;
+      border: 1px solid var(--mystic-line-strong);
+      background:
+        repeating-conic-gradient(
+          from 22.5deg,
+          color-mix(in srgb, var(--foreground) 18%, transparent) 0deg 1deg,
+          transparent 1deg 45deg
+        );
+    }
+
+    #mystic-randomizer-a91f .mystic-oracle-disc::after {
+      inset: 18%;
+      border: 1px solid var(--mystic-line-strong);
+    }
+
+    #mystic-randomizer-a91f .mystic-oracle-disc.is-casting::before {
+      animation: mystic-disc-turn 2s cubic-bezier(0.22, 0.72, 0.2, 1);
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels {
+      position: absolute;
+      inset: 0;
+      color: var(--muted-foreground);
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      min-inline-size: 2rem;
+      min-block-size: 2rem;
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(1) {
+      inset-block-start: 0;
+      inset-inline-start: 50%;
+      transform: translateX(-50%);
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(2) {
+      inset-block-start: 12%;
+      inset-inline-end: 12%;
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(3) {
+      inset-block-start: 50%;
+      inset-inline-end: 0;
+      transform: translateY(-50%);
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(4) {
+      inset-inline-end: 12%;
+      inset-block-end: 12%;
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(5) {
+      inset-inline-start: 50%;
+      inset-block-end: 0;
+      transform: translateX(-50%);
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(6) {
+      inset-inline-start: 12%;
+      inset-block-end: 12%;
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(7) {
+      inset-block-start: 50%;
+      inset-inline-start: 0;
+      transform: translateY(-50%);
+    }
+
+    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(8) {
+      inset-block-start: 12%;
+      inset-inline-start: 12%;
+    }
+
+    #mystic-randomizer-a91f .mystic-yao-stack {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0.55rem;
+      width: 46%;
+    }
+
+    #mystic-randomizer-a91f .mystic-yao-line {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 15%;
+      min-block-size: 1rem;
+      opacity: 0.2;
+      transform: scaleX(0.72);
+      transition:
+        opacity 180ms ease,
+        transform 240ms ease;
+    }
+
+    #mystic-randomizer-a91f .mystic-yao-line.is-drawn {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+
+    #mystic-randomizer-a91f .mystic-yao-segment {
+      flex: 1;
+      block-size: 0.28rem;
+      background: var(--border);
+    }
+
+    #mystic-randomizer-a91f .mystic-yao-line.is-drawn .mystic-yao-segment {
+      background: var(--foreground);
+    }
+
+    #mystic-randomizer-a91f .mystic-yao-line.is-moving .mystic-yao-segment {
+      background: var(--primary);
+    }
+
+    #mystic-randomizer-a91f .mystic-moving-mark {
+      position: absolute;
+      inset-inline-end: -2.3rem;
+      color: var(--foreground);
+      white-space: nowrap;
+    }
+
+    #mystic-randomizer-a91f .mystic-oracle-status {
+      padding-block: 0.72rem;
+      border-block: 1px solid var(--mystic-line-soft);
+      text-align: center;
+    }
+
+    #mystic-randomizer-a91f .mystic-oracle-summary {
+      display: grid;
+      grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
+      align-items: center;
+      gap: 1.25rem;
+      padding-block: 1rem;
+      border-block: 1px solid var(--mystic-line-strong);
+    }
+
+    #mystic-randomizer-a91f .mystic-mini-yao {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0.4rem;
+      width: 100%;
+    }
+
+    #mystic-randomizer-a91f .mystic-mini-yao .mystic-yao-line {
+      min-block-size: 0.75rem;
+    }
+
+    #mystic-randomizer-a91f .mystic-hex-name {
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      font-weight: 500;
+    }
+
+    #mystic-randomizer-a91f .mystic-seal {
+      display: grid;
+      place-items: center;
+      inline-size: 2.6rem;
+      aspect-ratio: 1;
+      border: 2px double var(--primary);
+      color: var(--foreground);
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      transform: rotate(-3deg);
+    }
+
+    #mystic-randomizer-a91f .mystic-result-list {
+      padding-inline: 1rem;
+      border: 1px solid var(--mystic-line-strong);
+    }
+
+    #mystic-randomizer-a91f .mystic-result-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 1rem;
+      align-items: baseline;
+      padding-block: 0.8rem;
+      border-block-end: 1px solid var(--mystic-line-soft);
+    }
+
+    #mystic-randomizer-a91f .mystic-result-row:last-child {
+      border-block-end: 0;
+    }
+
+    #mystic-randomizer-a91f .mystic-result-rank {
+      color: var(--foreground);
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      white-space: nowrap;
+    }
+
+    #mystic-randomizer-a91f .mystic-result-label {
+      overflow-wrap: anywhere;
+    }
+
+    #mystic-randomizer-a91f .mystic-notice {
+      padding: 0.7rem 0.8rem;
+      border-block: 1px solid var(--mystic-line-soft);
+      border-inline-start: 2px solid var(--primary);
+    }
+
+    #mystic-randomizer-a91f section[data-view="ritual"] .mystic-field-meta {
+      padding-block-end: 0.75rem;
+      border-block-end: 1px solid var(--mystic-line-soft);
+    }
+
+    #mystic-randomizer-a91f section[data-view="result"] > .mystic-stack > .viz-row {
+      padding-block: 0.7rem;
+      border-block: 1px solid var(--mystic-line-soft);
+    }
+
+    #mystic-randomizer-a91f .mystic-receipt-code {
+      display: block;
+      max-inline-size: 100%;
+      overflow-wrap: anywhere;
+      word-break: break-all;
+      white-space: normal;
+    }
+
+    #mystic-randomizer-a91f #mr-receipt table {
+      width: 100%;
+      table-layout: fixed;
+    }
+
+    #mystic-randomizer-a91f #mr-receipt th {
+      width: 6rem;
+      padding-inline-end: 1rem;
+      border-inline-end: 1px solid var(--mystic-line-soft);
+    }
+
+    #mystic-randomizer-a91f #mr-receipt td {
+      padding-inline-start: 1rem;
+    }
+
+    #mystic-randomizer-a91f #mr-receipt {
+      padding: 0.8rem 1rem;
+      border: 1px solid var(--mystic-line-strong);
+    }
+
+    #mystic-randomizer-a91f details summary {
+      cursor: pointer;
+      color: var(--foreground);
+      font-weight: 500;
+    }
+
+    #mystic-randomizer-a91f details[open] summary {
+      margin-block-end: 0.85rem;
+      padding-block-end: 0.75rem;
+      border-block-end: 1px solid var(--mystic-line-soft);
+    }
+
+    @keyframes mystic-disc-turn {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (max-width: 520px) {
+      #mystic-randomizer-a91f .mystic-form-grid,
+      #mystic-randomizer-a91f .mystic-oracle-summary {
+        grid-template-columns: 1fr;
+      }
+
+      #mystic-randomizer-a91f .mystic-form-grid > .form-label + .form-label {
+        padding-inline-start: 0;
+        padding-block-start: 0.85rem;
+        border-inline-start: 0;
+        border-block-start: 1px solid var(--mystic-line-soft);
+      }
+
+      #mystic-randomizer-a91f .mystic-stagebar {
+        gap: 0.45rem;
+      }
+
+      #mystic-randomizer-a91f .mystic-stage-divider {
+        inline-size: 1rem;
+      }
+
+      #mystic-randomizer-a91f .mystic-stage-long {
+        display: none;
+      }
+
+      #mystic-randomizer-a91f .mystic-stage-short {
+        display: inline;
+      }
+
+      #mystic-randomizer-a91f .mystic-mini-yao {
+        width: min(100%, 10rem);
+      }
+
+      #mystic-randomizer-a91f #mr-receipt {
+        padding: 0.65rem;
+      }
+
+      #mystic-randomizer-a91f #mr-receipt th {
+        width: 4.5rem;
+        padding-inline-end: 0.65rem;
+      }
+
+      #mystic-randomizer-a91f #mr-receipt td {
+        padding-inline-start: 0.65rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #mystic-randomizer-a91f *,
+      #mystic-randomizer-a91f *::before,
+      #mystic-randomizer-a91f *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+
+  <div class="mystic-stagebar text-small" aria-label="起签进度">
+    <span data-stage-mark="input" aria-current="step" aria-label="第一步：立题">
+      <span class="mystic-stage-long">壹 · 立题</span>
+      <span class="mystic-stage-short" aria-hidden="true">立题</span>
+    </span>
+    <span class="mystic-stage-divider" aria-hidden="true"></span>
+    <span data-stage-mark="ritual" aria-label="第二步：起卦">
+      <span class="mystic-stage-long">贰 · 起卦</span>
+      <span class="mystic-stage-short" aria-hidden="true">起卦</span>
+    </span>
+    <span class="mystic-stage-divider" aria-hidden="true"></span>
+    <span data-stage-mark="result" aria-label="第三步：揭签">
+      <span class="mystic-stage-long">叁 · 揭签</span>
+      <span class="mystic-stage-short" aria-hidden="true">揭签</span>
+    </span>
+  </div>
+
+  <section data-view="input" aria-label="输入选项">
+    <div class="card">
+      <form id="mr-form" class="mystic-stack" novalidate>
+        <div class="mystic-form-grid">
+          <label class="form-label" for="mr-question">
+            所问之事
+            <input
+              id="mr-question"
+              class="form-control"
+              type="text"
+              maxlength="80"
+              value="今天中午吃什么？"
+              placeholder="可不填"
+            />
+          </label>
+
+          <label class="form-label" for="mr-count">
+            取几签
+            <input
+              id="mr-count"
+              class="form-control"
+              type="number"
+              min="1"
+              step="1"
+              value="1"
+              inputmode="numeric"
+            />
+          </label>
+        </div>
+
+        <label class="form-label" for="mr-options">
+          候选签
+          <textarea
+            id="mr-options"
+            class="form-control"
+            spellcheck="false"
+            aria-describedby="mr-options-help mr-error"
+          >海南鸡饭
+牛肉面
+麻辣烫
+寿司
+馄饨
+烧腊饭
+韩式拌饭
+沙拉</textarea>
+        </label>
+
+        <div class="mystic-field-meta">
+          <span id="mr-options-help" class="text-small text-muted">每行一个选项；重复项默认不作为权重。</span>
+          <span id="mr-option-total" class="viz-badge" aria-live="polite">8 项候选</span>
+        </div>
+
+        <p id="mr-error" class="mystic-error text-destructive" role="alert"></p>
+
+        <div class="viz-controls">
+          <button id="mr-seal-button" class="btn btn-primary" type="submit">封签入局</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section data-view="ritual" aria-label="起卦" hidden>
+    <div class="card">
+      <div class="mystic-stack">
+        <div class="mystic-field-meta">
+          <span class="viz-badge">本局已封</span>
+          <span id="mr-ritual-meta" class="text-small text-muted"></span>
+        </div>
+
+        <div id="mr-question-summary" class="mystic-question-summary"></div>
+
+        <div
+          id="mr-oracle-disc"
+          class="mystic-oracle-disc"
+          role="img"
+          aria-label="尚未起卦的六爻盘"
+        >
+          <div class="mystic-ring-labels" aria-hidden="true">
+            <span>☰</span>
+            <span>☱</span>
+            <span>☲</span>
+            <span>☳</span>
+            <span>☷</span>
+            <span>☶</span>
+            <span>☵</span>
+            <span>☴</span>
+          </div>
+          <div id="mr-yao-stack" class="mystic-yao-stack" aria-hidden="true"></div>
+        </div>
+
+        <div id="mr-oracle-status" class="mystic-oracle-status text-muted" aria-live="polite">
+          静一息，再以当下一念起卦。
+        </div>
+
+        <div class="viz-controls">
+          <button id="mr-cast" class="btn btn-primary" type="button">此刻起卦</button>
+          <button id="mr-back-input" class="btn" type="button">返回修改</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section data-view="result" aria-label="揭签结果" hidden>
+    <div class="mystic-stack">
+      <div class="mystic-oracle-summary">
+        <div
+          id="mr-result-yao"
+          class="mystic-mini-yao"
+          role="img"
+          aria-label="本局六爻"
+        ></div>
+        <div class="mystic-stack">
+          <div class="viz-row">
+            <span id="mr-seal" class="mystic-seal" aria-hidden="true">签</span>
+            <span id="mr-accepted" class="viz-badge" hidden>此签已定</span>
+          </div>
+          <div id="mr-hex-name" class="mystic-hex-name"></div>
+          <div id="mr-hex-change" class="text-small text-muted"></div>
+        </div>
+      </div>
+
+      <div class="card viz-stat">
+        <div class="text-muted">主签</div>
+        <div id="mr-primary-result" class="viz-stat-value"></div>
+        <div id="mr-result-question" class="text-small text-muted"></div>
+      </div>
+
+      <div id="mr-companions" class="mystic-result-list" hidden></div>
+
+      <div id="mr-interpretation" class="mystic-notice"></div>
+
+      <div class="viz-row">
+        <span id="mr-probability-badge" class="viz-badge"></span>
+        <span class="viz-badge">无放回</span>
+        <span class="viz-badge">本地计算</span>
+      </div>
+
+      <div class="viz-controls">
+        <button id="mr-accept" class="btn btn-primary" type="button">就依此签</button>
+        <button id="mr-redraw" class="btn" type="button">另起一局</button>
+        <button id="mr-edit" class="btn btn-ghost" type="button">修改选项</button>
+      </div>
+
+      <details id="mr-receipt">
+        <summary>验签 · 查看本局计算凭证</summary>
+        <div class="mystic-stack">
+          <div>
+            <table class="table table-sm">
+              <tbody>
+                <tr>
+                  <th scope="row">算法</th>
+                  <td><code>liuyao-fair-v1</code></td>
+                </tr>
+                <tr>
+                  <th scope="row">起局</th>
+                  <td id="mr-receipt-time"></td>
+                </tr>
+                <tr>
+                  <th scope="row">概率</th>
+                  <td id="mr-receipt-probability"></td>
+                </tr>
+                <tr>
+                  <th scope="row">熵源</th>
+                  <td id="mr-receipt-entropy"></td>
+                </tr>
+                <tr>
+                  <th scope="row">卦钥</th>
+                  <td id="mr-receipt-transform"></td>
+                </tr>
+                <tr>
+                  <th scope="row">签号</th>
+                  <td><code id="mr-receipt-id"></code></td>
+                </tr>
+                <tr>
+                  <th scope="row">名单摘要</th>
+                  <td><code id="mr-receipt-options" class="mystic-receipt-code"></code></td>
+                </tr>
+                <tr>
+                  <th scope="row">复演种子</th>
+                  <td><code id="mr-receipt-seed" class="mystic-receipt-code"></code></td>
+                </tr>
+                <tr>
+                  <th scope="row">签证摘要</th>
+                  <td><code id="mr-receipt-digest" class="mystic-receipt-code"></code></td>
+                </tr>
+                <tr>
+                  <th scope="row">复演载荷</th>
+                  <td><code id="mr-receipt-payload" class="mystic-receipt-code"></code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="viz-controls">
+            <button id="mr-verify" class="btn" type="button">用本局种子复验</button>
+          </div>
+          <div id="mr-verify-status" class="mystic-verify-status text-small" aria-live="polite"></div>
+          <div class="text-small text-muted">传统文化意象演绎，仅用于轻量、低风险的日常选择。</div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <script>
+    (function () {
+      const root = document.getElementById("mystic-randomizer-a91f");
+      if (!root || root.dataset.ready === "true") return;
+      root.dataset.ready = "true";
+
+      const UINT32_RANGE = 4294967296;
+      const MAX_OPTIONS = 200;
+      const POPCOUNT3 = [0, 1, 1, 2, 1, 2, 2, 3];
+      const linePositions = ["初", "二", "三", "四", "五", "上"];
+      const trigrams = [
+        { name: "坤", glyph: "☷", nature: "地", counsel: "承其所来" },
+        { name: "震", glyph: "☳", nature: "雷", counsel: "动而不躁" },
+        { name: "坎", glyph: "☵", nature: "水", counsel: "慎而后行" },
+        { name: "兑", glyph: "☱", nature: "泽", counsel: "悦而能决" },
+        { name: "艮", glyph: "☶", nature: "山", counsel: "止于纷繁" },
+        { name: "离", glyph: "☲", nature: "火", counsel: "明而能辨" },
+        { name: "巽", glyph: "☴", nature: "风", counsel: "顺势而入" },
+        { name: "乾", glyph: "☰", nature: "天", counsel: "健而能断" }
+      ];
+
+      const views = Array.from(root.querySelectorAll("[data-view]"));
+      const stageMarks = Array.from(root.querySelectorAll("[data-stage-mark]"));
+      const form = root.querySelector("#mr-form");
+      const questionInput = root.querySelector("#mr-question");
+      const optionsInput = root.querySelector("#mr-options");
+      const countInput = root.querySelector("#mr-count");
+      const optionTotal = root.querySelector("#mr-option-total");
+      const errorEl = root.querySelector("#mr-error");
+      const sealButton = root.querySelector("#mr-seal-button");
+      const ritualMeta = root.querySelector("#mr-ritual-meta");
+      const questionSummary = root.querySelector("#mr-question-summary");
+      const oracleDisc = root.querySelector("#mr-oracle-disc");
+      const ritualYaoStack = root.querySelector("#mr-yao-stack");
+      const oracleStatus = root.querySelector("#mr-oracle-status");
+      const castButton = root.querySelector("#mr-cast");
+      const backInputButton = root.querySelector("#mr-back-input");
+      const resultYao = root.querySelector("#mr-result-yao");
+      const acceptedBadge = root.querySelector("#mr-accepted");
+      const hexName = root.querySelector("#mr-hex-name");
+      const hexChange = root.querySelector("#mr-hex-change");
+      const primaryResult = root.querySelector("#mr-primary-result");
+      const resultQuestion = root.querySelector("#mr-result-question");
+      const companions = root.querySelector("#mr-companions");
+      const interpretation = root.querySelector("#mr-interpretation");
+      const probabilityBadge = root.querySelector("#mr-probability-badge");
+      const acceptButton = root.querySelector("#mr-accept");
+      const redrawButton = root.querySelector("#mr-redraw");
+      const editButton = root.querySelector("#mr-edit");
+      const receipt = root.querySelector("#mr-receipt");
+      const receiptTime = root.querySelector("#mr-receipt-time");
+      const receiptProbability = root.querySelector("#mr-receipt-probability");
+      const receiptEntropy = root.querySelector("#mr-receipt-entropy");
+      const receiptTransform = root.querySelector("#mr-receipt-transform");
+      const receiptId = root.querySelector("#mr-receipt-id");
+      const receiptOptions = root.querySelector("#mr-receipt-options");
+      const receiptSeed = root.querySelector("#mr-receipt-seed");
+      const receiptDigest = root.querySelector("#mr-receipt-digest");
+      const receiptPayload = root.querySelector("#mr-receipt-payload");
+      const verifyButton = root.querySelector("#mr-verify");
+      const verifyStatus = root.querySelector("#mr-verify-status");
+
+      let sealed = null;
+      let currentDraw = null;
+
+      function showView(name) {
+        views.forEach((view) => {
+          view.hidden = view.dataset.view !== name;
+        });
+        stageMarks.forEach((mark) => {
+          if (mark.dataset.stageMark === name) {
+            mark.setAttribute("aria-current", "step");
+          } else {
+            mark.removeAttribute("aria-current");
+          }
+        });
+      }
+
+      function normalizeLabel(value) {
+        const trimmed = value.trim();
+        return typeof trimmed.normalize === "function"
+          ? trimmed.normalize("NFC")
+          : trimmed;
+      }
+
+      function readOptionLabels() {
+        return optionsInput.value
+          .split(/\r?\n/)
+          .map(normalizeLabel)
+          .filter(Boolean);
+      }
+
+      function updateOptionCount() {
+        const total = readOptionLabels().length;
+        optionTotal.textContent = `${total} 项候选`;
+        countInput.max = String(Math.max(1, total));
+        if (Number(countInput.value) > total && total > 0) {
+          countInput.value = String(total);
+        }
+      }
+
+      function autoGrowOptions() {
+        optionsInput.style.height = "auto";
+        const style = getComputedStyle(optionsInput);
+        const border =
+          Number.parseFloat(style.borderTopWidth || "0") +
+          Number.parseFloat(style.borderBottomWidth || "0");
+        optionsInput.style.height = `${optionsInput.scrollHeight + border}px`;
+      }
+
+      function clearInputError() {
+        errorEl.textContent = "";
+      }
+
+      function validateInput() {
+        const labels = readOptionLabels();
+        const m = Number(countInput.value);
+        errorEl.textContent = "";
+
+        if (labels.length < 1) {
+          errorEl.textContent = "请至少写入一个候选签。";
+          return null;
+        }
+        if (labels.length > MAX_OPTIONS) {
+          errorEl.textContent = `首版最多支持 ${MAX_OPTIONS} 个候选签。`;
+          return null;
+        }
+        if (!Number.isInteger(m) || m < 1 || m > labels.length) {
+          errorEl.textContent = `取签数必须是 1 到 ${labels.length} 之间的整数。`;
+          return null;
+        }
+
+        const seen = new Set();
+        const duplicates = [];
+        labels.forEach((label) => {
+          if (seen.has(label) && !duplicates.includes(label)) duplicates.push(label);
+          seen.add(label);
+        });
+        if (duplicates.length > 0) {
+          errorEl.textContent = `发现重复项：${duplicates.slice(0, 3).join("、")}。请删除重复项后再起卦。`;
+          return null;
+        }
+
+        return {
+          question: normalizeLabel(questionInput.value),
+          options: labels.map((label, index) => ({ id: index + 1, label })),
+          m
+        };
+      }
+
+      function assertSnapshot(snapshot) {
+        if (!snapshot || typeof snapshot !== "object") {
+          throw new TypeError("复演名单无效。");
+        }
+        if (typeof snapshot.question !== "string" || !Array.isArray(snapshot.options)) {
+          throw new TypeError("复演名单格式无效。");
+        }
+        const n = snapshot.options.length;
+        if (n < 1 || n > MAX_OPTIONS) {
+          throw new RangeError(`候选签数量必须在 1 到 ${MAX_OPTIONS} 之间。`);
+        }
+        if (!Number.isInteger(snapshot.m) || snapshot.m < 1 || snapshot.m > n) {
+          throw new RangeError("复演取签数无效。");
+        }
+
+        const ids = new Set();
+        const labels = new Set();
+        const options = snapshot.options.map((option, index) => {
+          if (
+            !option ||
+            !Number.isInteger(option.id) ||
+            typeof option.label !== "string"
+          ) {
+            throw new TypeError("复演候选签格式无效。");
+          }
+          const label = normalizeLabel(option.label);
+          if (!label || label !== option.label || ids.has(option.id) || labels.has(label)) {
+            throw new Error("复演候选签包含空项、重复项或未规范化文字。");
+          }
+          ids.add(option.id);
+          labels.add(label);
+          return { id: option.id, label, order: index };
+        });
+
+        return {
+          question: normalizeLabel(snapshot.question),
+          options: options.map(({ id, label }) => ({ id, label })),
+          m: snapshot.m
+        };
+      }
+
+      function bytesToHex(bytes) {
+        return Array.from(
+          bytes,
+          (byte) => byte.toString(16).padStart(2, "0")
+        ).join("");
+      }
+
+      function hexToBytes(seedHex) {
+        const clean = seedHex.trim().toLowerCase();
+        if (!/^[0-9a-f]{64}$/.test(clean)) {
+          throw new Error("种子必须是 64 位十六进制。");
+        }
+        return new Uint8Array(
+          clean.match(/.{2}/g).map((pair) => Number.parseInt(pair, 16))
+        );
+      }
+
+      function utf8Encode(source) {
+        const bytes = [];
+        for (const symbol of source) {
+          let codePoint = symbol.codePointAt(0);
+          if (codePoint >= 0xd800 && codePoint <= 0xdfff) codePoint = 0xfffd;
+          if (codePoint <= 0x7f) {
+            bytes.push(codePoint);
+          } else if (codePoint <= 0x7ff) {
+            bytes.push(
+              0xc0 | (codePoint >>> 6),
+              0x80 | (codePoint & 0x3f)
+            );
+          } else if (codePoint <= 0xffff) {
+            bytes.push(
+              0xe0 | (codePoint >>> 12),
+              0x80 | ((codePoint >>> 6) & 0x3f),
+              0x80 | (codePoint & 0x3f)
+            );
+          } else {
+            bytes.push(
+              0xf0 | (codePoint >>> 18),
+              0x80 | ((codePoint >>> 12) & 0x3f),
+              0x80 | ((codePoint >>> 6) & 0x3f),
+              0x80 | (codePoint & 0x3f)
+            );
+          }
+        }
+        return new Uint8Array(bytes);
+      }
+
+      const SHA256_K = new Uint32Array([
+        0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
+        0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+        0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+        0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+        0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
+        0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+        0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
+        0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+        0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+        0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+        0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
+        0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+        0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
+        0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+        0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+        0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+      ]);
+      let cryptoPrimitivesChecked = false;
+
+      function rotateRight(value, shift) {
+        return ((value >>> shift) | (value << (32 - shift))) >>> 0;
+      }
+
+      function concatBytes(...arrays) {
+        const length = arrays.reduce((sum, array) => sum + array.length, 0);
+        const output = new Uint8Array(length);
+        let offset = 0;
+        arrays.forEach((array) => {
+          output.set(array, offset);
+          offset += array.length;
+        });
+        return output;
+      }
+
+      function sha256(bytes) {
+        const length = bytes.length;
+        const paddedLength = Math.ceil((length + 9) / 64) * 64;
+        const padded = new Uint8Array(paddedLength);
+        padded.set(bytes);
+        padded[length] = 0x80;
+        const bitLengthHigh = Math.floor(length / 0x20000000);
+        const bitLengthLow = (length << 3) >>> 0;
+        const paddedView = new DataView(padded.buffer);
+        paddedView.setUint32(paddedLength - 8, bitLengthHigh, false);
+        paddedView.setUint32(paddedLength - 4, bitLengthLow, false);
+
+        const state = new Uint32Array([
+          0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+          0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
+        ]);
+        const schedule = new Uint32Array(64);
+
+        for (let chunk = 0; chunk < paddedLength; chunk += 64) {
+          for (let index = 0; index < 16; index += 1) {
+            schedule[index] = paddedView.getUint32(chunk + index * 4, false);
+          }
+          for (let index = 16; index < 64; index += 1) {
+            const x = schedule[index - 15];
+            const y = schedule[index - 2];
+            const sigma0 =
+              rotateRight(x, 7) ^ rotateRight(x, 18) ^ (x >>> 3);
+            const sigma1 =
+              rotateRight(y, 17) ^ rotateRight(y, 19) ^ (y >>> 10);
+            schedule[index] = (
+              schedule[index - 16] +
+              sigma0 +
+              schedule[index - 7] +
+              sigma1
+            ) >>> 0;
+          }
+
+          let a = state[0];
+          let b = state[1];
+          let c = state[2];
+          let d = state[3];
+          let e = state[4];
+          let f = state[5];
+          let g = state[6];
+          let h = state[7];
+
+          for (let index = 0; index < 64; index += 1) {
+            const sum1 =
+              rotateRight(e, 6) ^ rotateRight(e, 11) ^ rotateRight(e, 25);
+            const choose = (e & f) ^ (~e & g);
+            const temp1 = (
+              h + sum1 + choose + SHA256_K[index] + schedule[index]
+            ) >>> 0;
+            const sum0 =
+              rotateRight(a, 2) ^ rotateRight(a, 13) ^ rotateRight(a, 22);
+            const majority = (a & b) ^ (a & c) ^ (b & c);
+            const temp2 = (sum0 + majority) >>> 0;
+            h = g;
+            g = f;
+            f = e;
+            e = (d + temp1) >>> 0;
+            d = c;
+            c = b;
+            b = a;
+            a = (temp1 + temp2) >>> 0;
+          }
+
+          state[0] = (state[0] + a) >>> 0;
+          state[1] = (state[1] + b) >>> 0;
+          state[2] = (state[2] + c) >>> 0;
+          state[3] = (state[3] + d) >>> 0;
+          state[4] = (state[4] + e) >>> 0;
+          state[5] = (state[5] + f) >>> 0;
+          state[6] = (state[6] + g) >>> 0;
+          state[7] = (state[7] + h) >>> 0;
+        }
+
+        const digest = new Uint8Array(32);
+        const digestView = new DataView(digest.buffer);
+        state.forEach((word, index) => {
+          digestView.setUint32(index * 4, word, false);
+        });
+        return digest;
+      }
+
+      function hmacSha256(keyBytes, messageBytes) {
+        let key = keyBytes;
+        if (key.length > 64) key = sha256(key);
+        const block = new Uint8Array(64);
+        block.set(key);
+        const innerPad = new Uint8Array(64);
+        const outerPad = new Uint8Array(64);
+        for (let index = 0; index < 64; index += 1) {
+          innerPad[index] = block[index] ^ 0x36;
+          outerPad[index] = block[index] ^ 0x5c;
+        }
+        const innerDigest = sha256(concatBytes(innerPad, messageBytes));
+        return sha256(concatBytes(outerPad, innerDigest));
+      }
+
+      function ensureCryptoPrimitives() {
+        if (cryptoPrimitivesChecked) return;
+        const shaVector = bytesToHex(sha256(utf8Encode("abc")));
+        const hmacVector = bytesToHex(
+          hmacSha256(
+            utf8Encode("key"),
+            utf8Encode("The quick brown fox jumps over the lazy dog")
+          )
+        );
+        if (
+          shaVector !== "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad" ||
+          hmacVector !== "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
+        ) {
+          throw new Error("本地验签算法自检失败，本局不会继续。");
+        }
+        cryptoPrimitivesChecked = true;
+      }
+
+      function requireSecureRandom() {
+        if (!globalThis.crypto?.getRandomValues) {
+          throw new Error("当前环境无法提供安全随机数，本局不会降级抽取。");
+        }
+        ensureCryptoPrimitives();
+      }
+
+      function makeMasterSeed() {
+        requireSecureRandom();
+        const bytes = new Uint8Array(32);
+        globalThis.crypto.getRandomValues(bytes);
+        return {
+          bytes,
+          entropySource: "Web Crypto 256-bit 安全随机种子"
+        };
+      }
+
+      async function createHmacStream(masterSeed, domain) {
+        ensureCryptoPrimitives();
+        const domainBytes = utf8Encode(domain);
+        let counter = 0;
+        let block = new Uint8Array(0);
+        let offset = 0;
+
+        async function refill() {
+          const counterBytes = new Uint8Array(4);
+          new DataView(counterBytes.buffer).setUint32(0, counter, false);
+          counter += 1;
+          const message = new Uint8Array(domainBytes.length + 1 + counterBytes.length);
+          message.set(domainBytes, 0);
+          message[domainBytes.length] = 0;
+          message.set(counterBytes, domainBytes.length + 1);
+          block = hmacSha256(masterSeed, message);
+          offset = 0;
+        }
+
+        return {
+          async nextUint32() {
+            if (offset + 4 > block.length) await refill();
+            const value = new DataView(
+              block.buffer,
+              block.byteOffset + offset,
+              4
+            ).getUint32(0, false);
+            offset += 4;
+            return value;
+          }
+        };
+      }
+
+      async function uniformInt(maxExclusive, stream) {
+        if (!Number.isSafeInteger(maxExclusive) || maxExclusive < 1 || maxExclusive > UINT32_RANGE) {
+          throw new RangeError("随机上界无效。");
+        }
+        const limit = Math.floor(UINT32_RANGE / maxExclusive) * maxExclusive;
+        let value;
+        do {
+          value = await stream.nextUint32();
+        } while (value >= limit);
+        return value % maxExclusive;
+      }
+
+      async function castHexagram(masterSeed) {
+        const stream = await createHmacStream(masterSeed, "divination/v1");
+        const lines = [];
+        let primaryCode = 0;
+        let changedCode = 0;
+        let movingMask = 0;
+
+        for (let index = 0; index < 6; index += 1) {
+          const coinBits = await uniformInt(8, stream);
+          const value = 6 + POPCOUNT3[coinBits];
+          const primaryYang = value === 7 || value === 9;
+          const moving = value === 6 || value === 9;
+          const changedYang = moving ? !primaryYang : primaryYang;
+
+          if (primaryYang) primaryCode |= 1 << index;
+          if (moving) movingMask |= 1 << index;
+          if (changedYang) changedCode |= 1 << index;
+
+          lines.push({
+            position: index + 1,
+            value,
+            primaryYang,
+            moving,
+            changedYang
+          });
+        }
+
+        return {
+          lines,
+          primaryCode,
+          changedCode,
+          movingMask,
+          primaryLower: primaryCode & 7,
+          primaryUpper: (primaryCode >>> 3) & 7,
+          changedLower: changedCode & 7,
+          changedUpper: (changedCode >>> 3) & 7
+        };
+      }
+
+      function mix32(value) {
+        let x = value >>> 0;
+        x = (x ^ (x >>> 16)) >>> 0;
+        x = Math.imul(x, 0x7feb352d) >>> 0;
+        x = (x ^ (x >>> 15)) >>> 0;
+        x = Math.imul(x, 0x846ca68b) >>> 0;
+        return (x ^ (x >>> 16)) >>> 0;
+      }
+
+      function gcd(a, b) {
+        let x = a;
+        let y = b;
+        while (y !== 0) {
+          const next = x % y;
+          x = y;
+          y = next;
+        }
+        return x;
+      }
+
+      function bitCount(value) {
+        let count = 0;
+        let x = value >>> 0;
+        while (x) {
+          x &= x - 1;
+          count += 1;
+        }
+        return count;
+      }
+
+      function guaKey(oracle) {
+        return (
+          oracle.primaryCode |
+          (oracle.changedCode << 6) |
+          (oracle.movingMask << 12)
+        ) >>> 0;
+      }
+
+      function deriveAffineTransform(n, oracle) {
+        const key = guaKey(oracle);
+        if (n === 1) return { a: 0, b: 0, key, reversed: false };
+
+        let a = 1 + (mix32(key ^ 0xa5a5a5a5) % (n - 1));
+        while (gcd(a, n) !== 1) {
+          a += 1;
+          if (a === n) a = 1;
+        }
+        const reversed = (bitCount(oracle.movingMask) & 1) === 1;
+        if (reversed) a = n - a;
+        const b = mix32(key ^ 0x3c6ef372) % n;
+        return { a, b, key, reversed };
+      }
+
+      async function selectOptions(masterSeed, options, m, oracle) {
+        const stream = await createHmacStream(masterSeed, "selection/v1");
+        const n = options.length;
+        const transform = deriveAffineTransform(n, oracle);
+        const pool = Array.from(
+          { length: n },
+          (_, index) => n === 1 ? 0 : (transform.a * index + transform.b) % n
+        );
+        const swapOffsets = [];
+
+        for (let index = 0; index < m; index += 1) {
+          const span = n - index;
+          const offset = await uniformInt(span, stream);
+          const swapIndex = index + offset;
+          [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
+          swapOffsets.push(offset);
+        }
+
+        const selectedIndices = pool.slice(0, m);
+        return {
+          transform,
+          swapOffsets,
+          selectedIndices,
+          selected: selectedIndices.map((index) => options[index])
+        };
+      }
+
+      async function computeDraw(masterSeed, snapshot) {
+        const checked = assertSnapshot(snapshot);
+        const oracle = await castHexagram(masterSeed);
+        const selection = await selectOptions(
+          masterSeed,
+          checked.options,
+          checked.m,
+          oracle
+        );
+        return { oracle, ...selection };
+      }
+
+      async function optionListDigest(snapshot) {
+        const canonical = JSON.stringify(
+          snapshot.options.map((option) => ({
+            id: option.id,
+            label: option.label
+          }))
+        );
+        return bytesToHex(await sha256(utf8Encode(canonical)));
+      }
+
+      async function createDraw(snapshot) {
+        const checked = assertSnapshot(snapshot);
+        const seedInfo = makeMasterSeed();
+        const masterSeed = seedInfo.bytes;
+        const computed = await computeDraw(masterSeed, checked);
+        const optionDigest = await optionListDigest(checked);
+        const seedHex = bytesToHex(masterSeed);
+        const createdAt = new Date();
+        const drawId =
+          `${seedHex.slice(0, 4)}-${seedHex.slice(4, 8)}-${seedHex.slice(8, 12)}`.toUpperCase();
+        const payloadObject = {
+          version: "liuyao-fair-v1",
+          seed: seedHex,
+          drawId,
+          createdAt: createdAt.toISOString(),
+          question: checked.question,
+          options: checked.options.map((option) => ({
+            id: option.id,
+            label: option.label
+          })),
+          m: checked.m,
+          optionDigest,
+          oracle: {
+            primaryCode: computed.oracle.primaryCode,
+            changedCode: computed.oracle.changedCode,
+            movingMask: computed.oracle.movingMask
+          },
+          transform: {
+            a: computed.transform.a,
+            b: computed.transform.b,
+            reversed: computed.transform.reversed
+          },
+          selectedIndices: computed.selectedIndices.slice()
+        };
+        const receiptPayloadText = JSON.stringify(payloadObject);
+        const receiptDigestHex = bytesToHex(
+          await sha256(utf8Encode(receiptPayloadText))
+        );
+
+        return {
+          algorithmVersion: "liuyao-fair-v1",
+          masterSeed,
+          seedHex,
+          entropySource: seedInfo.entropySource,
+          drawId,
+          optionDigest,
+          receiptPayload: receiptPayloadText,
+          receiptDigest: receiptDigestHex,
+          createdAt,
+          ...computed
+        };
+      }
+
+      function buildEmptyYaoStack(container) {
+        container.replaceChildren();
+        for (let index = 0; index < 6; index += 1) {
+          const line = document.createElement("div");
+          line.className = "mystic-yao-line";
+          line.dataset.lineIndex = String(index);
+          const segment = document.createElement("span");
+          segment.className = "mystic-yao-segment";
+          line.append(segment);
+          container.append(line);
+        }
+      }
+
+      function drawYaoLine(element, line) {
+        element.replaceChildren();
+        const segmentCount = line.primaryYang ? 1 : 2;
+        for (let index = 0; index < segmentCount; index += 1) {
+          const segment = document.createElement("span");
+          segment.className = "mystic-yao-segment";
+          element.append(segment);
+        }
+        element.classList.toggle("is-moving", line.moving);
+        element.classList.add("is-drawn");
+        if (line.moving) {
+          const mark = document.createElement("span");
+          mark.className = "mystic-moving-mark text-small";
+          mark.textContent = "动";
+          element.append(mark);
+        }
+      }
+
+      function renderCompleteYao(container, lines) {
+        buildEmptyYaoStack(container);
+        const elements = Array.from(container.querySelectorAll(".mystic-yao-line"));
+        lines.forEach((line, index) => drawYaoLine(elements[index], line));
+      }
+
+      function delay(milliseconds) {
+        return new Promise((resolve) => setTimeout(resolve, milliseconds));
+      }
+
+      async function animateOracle(draw) {
+        buildEmptyYaoStack(ritualYaoStack);
+        const elements = Array.from(ritualYaoStack.querySelectorAll(".mystic-yao-line"));
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const stepDelay = reducedMotion ? 0 : 250;
+        oracleDisc.classList.add("is-casting");
+
+        for (let index = 0; index < draw.oracle.lines.length; index += 1) {
+          if (stepDelay) await delay(stepDelay);
+          const line = draw.oracle.lines[index];
+          drawYaoLine(elements[index], line);
+          oracleStatus.textContent = `${linePositions[index]}爻已生 · ${index + 1} / 6`;
+        }
+
+        oracleDisc.setAttribute(
+          "aria-label",
+          `六爻已成，爻值自下而上为 ${draw.oracle.lines.map((line) => line.value).join("、")}`
+        );
+        oracleStatus.textContent = "六爻已成，正在落签。";
+        if (!reducedMotion) await delay(420);
+        oracleDisc.classList.remove("is-casting");
+      }
+
+      function probabilityText(m, n) {
+        const percentage = (m / n) * 100;
+        const formatted = Number.isInteger(percentage)
+          ? percentage.toFixed(0)
+          : percentage.toFixed(1);
+        return `每项 ${m}/${n} · ${formatted}%`;
+      }
+
+      function movingLineText(oracle) {
+        const moving = oracle.lines
+          .filter((line) => line.moving)
+          .map((line) => linePositions[line.position - 1]);
+        if (moving.length === 0) return "六爻皆静";
+        return `${moving.join("、")}爻动`;
+      }
+
+      function renderCompanions(selected) {
+        companions.replaceChildren();
+        if (selected.length <= 1) {
+          companions.hidden = true;
+          return;
+        }
+        companions.hidden = false;
+        selected.slice(1).forEach((option, index) => {
+          const row = document.createElement("div");
+          row.className = "mystic-result-row";
+          const rank = document.createElement("span");
+          rank.className = "mystic-result-rank text-small";
+          rank.textContent = `伴签 ${index + 1}`;
+          const label = document.createElement("span");
+          label.className = "mystic-result-label";
+          label.textContent = option.label;
+          row.append(rank, label);
+          companions.append(row);
+        });
+      }
+
+      function renderResult(draw) {
+        const oracle = draw.oracle;
+        const lower = trigrams[oracle.primaryLower];
+        const upper = trigrams[oracle.primaryUpper];
+        const changedLower = trigrams[oracle.changedLower];
+        const changedUpper = trigrams[oracle.changedUpper];
+
+        renderCompleteYao(resultYao, oracle.lines);
+        resultYao.setAttribute(
+          "aria-label",
+          `本局六爻，自下而上为 ${oracle.lines.map((line) => line.value).join("、")}`
+        );
+        hexName.textContent = `${upper.glyph} ${upper.name}${upper.nature}在上 · ${lower.glyph} ${lower.name}${lower.nature}在下`;
+        hexChange.textContent = `${movingLineText(oracle)} · 变为${changedUpper.name}上${changedLower.name}下`;
+        primaryResult.textContent = draw.selected[0].label;
+        resultQuestion.textContent = sealed.question || "此局不立题，只凭当下一念。";
+        renderCompanions(draw.selected);
+
+        interpretation.textContent =
+          `象意取「${lower.counsel}，${upper.counsel}」。签既已成，宜少作反复。`;
+
+        probabilityBadge.textContent = probabilityText(sealed.m, sealed.options.length);
+        receiptTime.textContent = new Intl.DateTimeFormat("zh-CN", {
+          dateStyle: "medium",
+          timeStyle: "medium"
+        }).format(draw.createdAt);
+        receiptProbability.textContent =
+          `${probabilityText(sealed.m, sealed.options.length)}，等概率、无放回`;
+        receiptEntropy.textContent = draw.entropySource;
+        receiptTransform.textContent =
+          `P(i)=(${draw.transform.a}×i+${draw.transform.b}) mod ${sealed.options.length} · ${draw.transform.reversed ? "逆行" : "顺行"}`;
+        receiptId.textContent = draw.drawId;
+        receiptOptions.textContent = draw.optionDigest;
+        receiptSeed.textContent = draw.seedHex;
+        receiptDigest.textContent = draw.receiptDigest;
+        receiptPayload.textContent = draw.receiptPayload;
+        verifyStatus.textContent = "";
+        receipt.open = false;
+        acceptedBadge.hidden = true;
+        acceptButton.disabled = false;
+        acceptButton.textContent = "就依此签";
+      }
+
+      async function startCast() {
+        if (!sealed || castButton.disabled) return;
+        castButton.disabled = true;
+        backInputButton.disabled = true;
+        oracleStatus.textContent = "正在取数起卦。";
+
+        try {
+          currentDraw = await createDraw(sealed);
+          await animateOracle(currentDraw);
+          renderResult(currentDraw);
+          showView("result");
+          acceptButton.focus();
+        } catch (error) {
+          oracleStatus.textContent = error instanceof Error
+            ? error.message
+            : "起卦未成，请稍后重试。";
+        } finally {
+          castButton.disabled = false;
+          backInputButton.disabled = false;
+        }
+      }
+
+      function sealCurrentInput() {
+        try {
+          const snapshot = validateInput();
+          if (!snapshot) return;
+
+          sealed = {
+            question: snapshot.question,
+            options: snapshot.options.map((option) => ({ ...option })),
+            m: snapshot.m
+          };
+          currentDraw = null;
+          ritualMeta.textContent = `${sealed.options.length} 项取 ${sealed.m} 项`;
+          questionSummary.textContent = sealed.question || "未立题 · 只问当下一念";
+          oracleStatus.textContent = "静一息，再以当下一念起卦。";
+          oracleDisc.setAttribute("aria-label", "尚未起卦的六爻盘");
+          buildEmptyYaoStack(ritualYaoStack);
+          showView("ritual");
+          castButton.focus();
+        } catch (error) {
+          errorEl.textContent = error instanceof Error
+            ? `封签未成：${error.message}`
+            : "封签未成，请检查输入。";
+        }
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sealCurrentInput();
+      });
+      sealButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        sealCurrentInput();
+      });
+
+      optionsInput.addEventListener("input", () => {
+        updateOptionCount();
+        autoGrowOptions();
+        clearInputError();
+      });
+      countInput.addEventListener("input", clearInputError);
+      questionInput.addEventListener("input", clearInputError);
+
+      castButton.addEventListener("click", startCast);
+
+      backInputButton.addEventListener("click", () => {
+        showView("input");
+        autoGrowOptions();
+        optionsInput.focus();
+      });
+
+      acceptButton.addEventListener("click", () => {
+        acceptedBadge.hidden = false;
+        acceptButton.disabled = true;
+        acceptButton.textContent = "已依此签";
+      });
+
+      redrawButton.addEventListener("click", () => {
+        if (!sealed) return;
+        currentDraw = null;
+        oracleStatus.textContent = "新局已封，静一息再起卦。";
+        oracleDisc.setAttribute("aria-label", "尚未起卦的六爻盘");
+        buildEmptyYaoStack(ritualYaoStack);
+        showView("ritual");
+        castButton.focus();
+      });
+
+      editButton.addEventListener("click", () => {
+        showView("input");
+        autoGrowOptions();
+        optionsInput.focus();
+      });
+
+      globalThis.addEventListener?.("resize", () => {
+        const inputView = views.find((view) => view.dataset.view === "input");
+        if (inputView && !inputView.hidden) autoGrowOptions();
+      });
+
+      verifyButton.addEventListener("click", async () => {
+        if (!receiptPayload.textContent) return;
+        verifyButton.disabled = true;
+        verifyStatus.classList.remove("text-destructive");
+        verifyStatus.textContent = "正在按签证载荷复演。";
+        try {
+          const payloadText = receiptPayload.textContent;
+          const payload = JSON.parse(payloadText);
+          if (
+            payload.version !== "liuyao-fair-v1" ||
+            !payload.oracle ||
+            !payload.transform ||
+            !Array.isArray(payload.selectedIndices)
+          ) {
+            throw new Error("签证格式无效。");
+          }
+
+          const snapshot = assertSnapshot({
+            question: payload.question,
+            options: payload.options,
+            m: payload.m
+          });
+          const masterSeed = hexToBytes(payload.seed);
+          const replay = await computeDraw(masterSeed, snapshot);
+          const computedPayloadDigest = bytesToHex(
+            await sha256(utf8Encode(payloadText))
+          );
+          const computedOptionDigest = await optionListDigest(snapshot);
+          const computedDrawId =
+            `${payload.seed.slice(0, 4)}-${payload.seed.slice(4, 8)}-${payload.seed.slice(8, 12)}`.toUpperCase();
+          const expectedTransformText =
+            `P(i)=(${replay.transform.a}×i+${replay.transform.b}) mod ${snapshot.options.length} · ${replay.transform.reversed ? "逆行" : "顺行"}`;
+          const displayedResults = [
+            primaryResult.textContent,
+            ...Array.from(
+              companions.querySelectorAll(".mystic-result-label"),
+              (node) => node.textContent
+            )
+          ];
+          const replayResults = replay.selected.map((option) => option.label);
+          const sameArray = (left, right) =>
+            Array.isArray(left) &&
+            Array.isArray(right) &&
+            left.length === right.length &&
+            left.every((value, index) => value === right[index]);
+
+          const isValid =
+            receiptDigest.textContent.trim() === computedPayloadDigest &&
+            receiptSeed.textContent.trim() === payload.seed &&
+            receiptOptions.textContent.trim() === computedOptionDigest &&
+            receiptId.textContent.trim() === computedDrawId &&
+            receiptTransform.textContent.trim() === expectedTransformText &&
+            payload.drawId === computedDrawId &&
+            payload.optionDigest === computedOptionDigest &&
+            payload.oracle.primaryCode === replay.oracle.primaryCode &&
+            payload.oracle.changedCode === replay.oracle.changedCode &&
+            payload.oracle.movingMask === replay.oracle.movingMask &&
+            payload.transform.a === replay.transform.a &&
+            payload.transform.b === replay.transform.b &&
+            payload.transform.reversed === replay.transform.reversed &&
+            sameArray(payload.selectedIndices, replay.selectedIndices) &&
+            sameArray(displayedResults, replayResults);
+
+          if (!isValid) throw new Error("签证内容与复演结果不一致。");
+          verifyStatus.textContent = "复验一致：名单、卦码、卦钥与选中序列均匹配。";
+        } catch (error) {
+          verifyStatus.classList.add("text-destructive");
+          verifyStatus.textContent = "复验不一致：签证内容可能已改变。";
+        } finally {
+          verifyButton.disabled = false;
+        }
+      });
+
+      updateOptionCount();
+      autoGrowOptions();
+      buildEmptyYaoStack(ritualYaoStack);
+
+      root.__mysticRandomizer = {
+        computeDraw,
+        deriveAffineTransform,
+        bytesToHex,
+        async drawFromSeedHex(seedHex, snapshot) {
+          const checked = assertSnapshot(snapshot);
+          return computeDraw(hexToBytes(seedHex), checked);
+        }
+      };
+    })();
+  </script>
+</div>
+
+</body>
+</html>
