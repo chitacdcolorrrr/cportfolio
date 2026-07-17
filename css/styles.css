@@ -65,7 +65,7 @@ body::after {
     font-weight: 700;
     letter-spacing: 0.16em;
     line-height: 1.2;
-    animation: home-reveal 0.7s ease-out 0.1s both;
+    animation: home-reveal 0.7s ease-out 0.1s backwards;
 }
 
 .site-brand-link {
@@ -149,7 +149,7 @@ body::after {
     margin-bottom: 0.15rem;
     font-size: clamp(1rem, 2.5vh, 1.25rem);
     font-weight: 400;
-    animation: home-reveal 0.7s ease-out 0.35s both;
+    animation: home-reveal 0.7s ease-out 0.35s backwards;
 }
 
 #element3,
@@ -160,15 +160,15 @@ body::after {
 }
 
 #element3 {
-    animation: home-reveal 0.7s ease-out 0.48s both;
+    animation: home-reveal 0.7s ease-out 0.48s backwards;
 }
 
 #element4 {
-    animation: home-reveal 0.7s ease-out 0.61s both;
+    animation: home-reveal 0.7s ease-out 0.61s backwards;
 }
 
 #element5 {
-    animation: home-reveal 0.7s ease-out 0.74s both;
+    animation: home-reveal 0.7s ease-out 0.74s backwards;
 }
 
 .subtitle-container {
@@ -193,7 +193,7 @@ body::after {
     line-height: 1.4;
     text-align: center;
     text-shadow: 0 1px 0.9rem rgba(2, 10, 16, 0.4);
-    animation: home-reveal 0.7s ease-out 0.9s both;
+    animation: home-reveal 0.7s ease-out 0.9s backwards;
 }
 
 @media (hover: hover) {
