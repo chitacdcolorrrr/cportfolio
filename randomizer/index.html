@@ -803,17 +803,86 @@ svg {
   color: var(--destructive);
 }
 
+:root {
+  --background: light-dark(rgb(244 240 230), rgb(22 27 24));
+  --foreground: light-dark(rgb(35 55 50), rgb(232 225 210));
+  --card: light-dark(rgb(250 247 238 / 96%), rgb(29 36 32 / 96%));
+  --card-foreground: var(--foreground);
+  --popover: light-dark(rgb(250 247 238), rgb(34 42 37));
+  --popover-foreground: var(--foreground);
+  --primary: light-dark(rgb(155 61 50), rgb(203 103 88));
+  --primary-foreground: light-dark(rgb(255 248 235), rgb(30 29 25));
+  --secondary: light-dark(rgb(242 237 224 / 96%), rgb(36 45 40 / 96%));
+  --secondary-foreground: var(--foreground);
+  --muted: light-dark(rgb(231 224 209), rgb(41 50 45));
+  --muted-foreground: light-dark(rgb(102 99 89), rgb(174 174 162));
+  --accent: light-dark(rgb(220 229 218), rgb(40 58 49));
+  --accent-foreground: light-dark(rgb(52 92 75), rgb(178 207 190));
+  --destructive: light-dark(rgb(164 49 43), rgb(235 128 110));
+  --border: light-dark(rgb(63 71 58 / 24%), rgb(231 222 204 / 20%));
+  --input: light-dark(rgb(63 71 58 / 38%), rgb(231 222 204 / 30%));
+  --ring: light-dark(rgb(155 61 50), rgb(203 103 88));
+  --font-size-base: 15px;
+}
+
 html > body {
   min-height: 100%;
   padding: clamp(12px, 3vw, 24px);
   background: var(--background) !important;
 }
+
+body > .oracle-masthead,
+body > main {
+  width: 100%;
+  max-width: 736px;
+  margin-inline: auto;
+}
+
+.oracle-masthead {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem;
+  margin-block-end: 1.25rem;
+  padding-block-end: 1rem;
+  border-block-end: 1px solid var(--border);
+}
+
+.oracle-kicker {
+  color: var(--muted-foreground);
+  font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+  letter-spacing: 0.14em;
+}
+
+.oracle-title {
+  margin-block: 0.35rem 0;
+  font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+}
+
+.oracle-mark {
+  display: grid;
+  place-items: center;
+  inline-size: 3.25rem;
+  aspect-ratio: 1;
+  border: 2px double var(--primary);
+  color: var(--primary);
+  font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+  transform: rotate(-2deg);
+}
 </style>
 </head>
 <body>
-<div id="mystic-randomizer-a91f">
+<header class="oracle-masthead">
+  <div>
+    <div class="oracle-kicker text-small">有诸选 · 无所偏 · 一念落签</div>
+    <h1 class="oracle-title">一卦定选</h1>
+  </div>
+  <div class="oracle-mark" aria-hidden="true">定</div>
+</header>
+<main>
+<div id="oracle-randomizer-b72d">
   <style>
-    #mystic-randomizer-a91f {
+    #oracle-randomizer-b72d {
       width: 100%;
       max-inline-size: 736px;
       margin-inline: auto;
@@ -835,6 +904,7 @@ html > body {
       --border: light-dark(rgb(63 71 58 / 24%), rgb(231 222 204 / 20%));
       --input: light-dark(rgb(63 71 58 / 38%), rgb(231 222 204 / 30%));
       --ring: light-dark(rgb(155 61 50), rgb(203 103 88));
+      --font-size-base: 15px;
       --mystic-line-soft: var(--border);
       --mystic-line-strong: light-dark(
         rgb(55 69 57 / 44%),
@@ -843,16 +913,16 @@ html > body {
       color: var(--foreground);
     }
 
-    #mystic-randomizer-a91f * {
+    #oracle-randomizer-b72d * {
       box-sizing: border-box;
     }
 
-    #mystic-randomizer-a91f .mystic-stack {
+    #oracle-randomizer-b72d .mystic-stack {
       display: grid;
       gap: 1rem;
     }
 
-    #mystic-randomizer-a91f .mystic-stagebar {
+    #oracle-randomizer-b72d .mystic-stagebar {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -865,29 +935,29 @@ html > body {
       letter-spacing: 0.08em;
     }
 
-    #mystic-randomizer-a91f .mystic-stagebar [aria-current="step"] {
+    #oracle-randomizer-b72d .mystic-stagebar [aria-current="step"] {
       color: var(--foreground);
       font-weight: 500;
     }
 
-    #mystic-randomizer-a91f .mystic-stagebar [aria-current="step"]::before {
+    #oracle-randomizer-b72d .mystic-stagebar [aria-current="step"]::before {
       content: "◆";
       margin-inline-end: 0.35rem;
       color: var(--primary);
     }
 
-    #mystic-randomizer-a91f .mystic-stage-short {
+    #oracle-randomizer-b72d .mystic-stage-short {
       display: none;
     }
 
-    #mystic-randomizer-a91f .mystic-stage-divider {
+    #oracle-randomizer-b72d .mystic-stage-divider {
       position: relative;
       inline-size: 2rem;
       block-size: 1px;
       background: var(--mystic-line-strong);
     }
 
-    #mystic-randomizer-a91f .mystic-stage-divider::after {
+    #oracle-randomizer-b72d .mystic-stage-divider::after {
       content: "";
       position: absolute;
       inset-block-start: 50%;
@@ -898,28 +968,28 @@ html > body {
       transform: translate(-50%, -50%) rotate(45deg);
     }
 
-    #mystic-randomizer-a91f .mystic-form-grid {
+    #oracle-randomizer-b72d .mystic-form-grid {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(8rem, 0.3fr);
       gap: 1rem;
     }
 
-    #mystic-randomizer-a91f .mystic-form-grid > .form-label + .form-label {
+    #oracle-randomizer-b72d .mystic-form-grid > .form-label + .form-label {
       padding-inline-start: 1rem;
       border-inline-start: 1px solid var(--mystic-line-soft);
     }
 
-    #mystic-randomizer-a91f #mr-form > .form-label {
+    #oracle-randomizer-b72d #mr-form > .form-label {
       padding-block: 1rem;
       border-block: 1px solid var(--mystic-line-soft);
     }
 
-    #mystic-randomizer-a91f #mr-form > .mystic-field-meta {
+    #oracle-randomizer-b72d #mr-form > .mystic-field-meta {
       padding-block-end: 0.85rem;
       border-block-end: 1px solid var(--mystic-line-soft);
     }
 
-    #mystic-randomizer-a91f .mystic-field-meta {
+    #oracle-randomizer-b72d .mystic-field-meta {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -927,25 +997,25 @@ html > body {
       flex-wrap: wrap;
     }
 
-    #mystic-randomizer-a91f textarea.form-control {
+    #oracle-randomizer-b72d textarea.form-control {
       min-block-size: 13rem;
       overflow: hidden;
       resize: none;
     }
 
-    #mystic-randomizer-a91f .mystic-error:empty,
-    #mystic-randomizer-a91f .mystic-verify-status:empty {
+    #oracle-randomizer-b72d .mystic-error:empty,
+    #oracle-randomizer-b72d .mystic-verify-status:empty {
       display: none;
     }
 
-    #mystic-randomizer-a91f .mystic-question-summary {
+    #oracle-randomizer-b72d .mystic-question-summary {
       padding-block: 0.75rem;
       border-block: 1px solid var(--mystic-line-soft);
       text-align: center;
       overflow-wrap: anywhere;
     }
 
-    #mystic-randomizer-a91f .mystic-oracle-disc {
+    #oracle-randomizer-b72d .mystic-oracle-disc {
       position: relative;
       display: grid;
       place-items: center;
@@ -955,15 +1025,15 @@ html > body {
       color: var(--foreground);
     }
 
-    #mystic-randomizer-a91f .mystic-oracle-disc::before,
-    #mystic-randomizer-a91f .mystic-oracle-disc::after {
+    #oracle-randomizer-b72d .mystic-oracle-disc::before,
+    #oracle-randomizer-b72d .mystic-oracle-disc::after {
       content: "";
       position: absolute;
       border-radius: 50%;
       pointer-events: none;
     }
 
-    #mystic-randomizer-a91f .mystic-oracle-disc::before {
+    #oracle-randomizer-b72d .mystic-oracle-disc::before {
       inset: 7%;
       border: 1px solid var(--mystic-line-strong);
       background:
@@ -974,23 +1044,23 @@ html > body {
         );
     }
 
-    #mystic-randomizer-a91f .mystic-oracle-disc::after {
+    #oracle-randomizer-b72d .mystic-oracle-disc::after {
       inset: 18%;
       border: 1px solid var(--mystic-line-strong);
     }
 
-    #mystic-randomizer-a91f .mystic-oracle-disc.is-casting::before {
+    #oracle-randomizer-b72d .mystic-oracle-disc.is-casting::before {
       animation: mystic-disc-turn 2s cubic-bezier(0.22, 0.72, 0.2, 1);
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels {
+    #oracle-randomizer-b72d .mystic-ring-labels {
       position: absolute;
       inset: 0;
       color: var(--muted-foreground);
       font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span {
+    #oracle-randomizer-b72d .mystic-ring-labels span {
       position: absolute;
       display: grid;
       place-items: center;
@@ -998,51 +1068,51 @@ html > body {
       min-block-size: 2rem;
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(1) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(1) {
       inset-block-start: 0;
       inset-inline-start: 50%;
       transform: translateX(-50%);
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(2) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(2) {
       inset-block-start: 12%;
       inset-inline-end: 12%;
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(3) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(3) {
       inset-block-start: 50%;
       inset-inline-end: 0;
       transform: translateY(-50%);
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(4) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(4) {
       inset-inline-end: 12%;
       inset-block-end: 12%;
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(5) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(5) {
       inset-inline-start: 50%;
       inset-block-end: 0;
       transform: translateX(-50%);
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(6) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(6) {
       inset-inline-start: 12%;
       inset-block-end: 12%;
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(7) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(7) {
       inset-block-start: 50%;
       inset-inline-start: 0;
       transform: translateY(-50%);
     }
 
-    #mystic-randomizer-a91f .mystic-ring-labels span:nth-child(8) {
+    #oracle-randomizer-b72d .mystic-ring-labels span:nth-child(8) {
       inset-block-start: 12%;
       inset-inline-start: 12%;
     }
 
-    #mystic-randomizer-a91f .mystic-yao-stack {
+    #oracle-randomizer-b72d .mystic-yao-stack {
       position: relative;
       z-index: 1;
       display: flex;
@@ -1051,7 +1121,7 @@ html > body {
       width: 46%;
     }
 
-    #mystic-randomizer-a91f .mystic-yao-line {
+    #oracle-randomizer-b72d .mystic-yao-line {
       position: relative;
       display: flex;
       align-items: center;
@@ -1064,39 +1134,39 @@ html > body {
         transform 240ms ease;
     }
 
-    #mystic-randomizer-a91f .mystic-yao-line.is-drawn {
+    #oracle-randomizer-b72d .mystic-yao-line.is-drawn {
       opacity: 1;
       transform: scaleX(1);
     }
 
-    #mystic-randomizer-a91f .mystic-yao-segment {
+    #oracle-randomizer-b72d .mystic-yao-segment {
       flex: 1;
       block-size: 0.28rem;
       background: var(--border);
     }
 
-    #mystic-randomizer-a91f .mystic-yao-line.is-drawn .mystic-yao-segment {
+    #oracle-randomizer-b72d .mystic-yao-line.is-drawn .mystic-yao-segment {
       background: var(--foreground);
     }
 
-    #mystic-randomizer-a91f .mystic-yao-line.is-moving .mystic-yao-segment {
+    #oracle-randomizer-b72d .mystic-yao-line.is-moving .mystic-yao-segment {
       background: var(--primary);
     }
 
-    #mystic-randomizer-a91f .mystic-moving-mark {
+    #oracle-randomizer-b72d .mystic-moving-mark {
       position: absolute;
       inset-inline-end: -2.3rem;
       color: var(--foreground);
       white-space: nowrap;
     }
 
-    #mystic-randomizer-a91f .mystic-oracle-status {
+    #oracle-randomizer-b72d .mystic-oracle-status {
       padding-block: 0.72rem;
       border-block: 1px solid var(--mystic-line-soft);
       text-align: center;
     }
 
-    #mystic-randomizer-a91f .mystic-oracle-summary {
+    #oracle-randomizer-b72d .mystic-oracle-summary {
       display: grid;
       grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
       align-items: center;
@@ -1105,23 +1175,23 @@ html > body {
       border-block: 1px solid var(--mystic-line-strong);
     }
 
-    #mystic-randomizer-a91f .mystic-mini-yao {
+    #oracle-randomizer-b72d .mystic-mini-yao {
       display: flex;
       flex-direction: column-reverse;
       gap: 0.4rem;
       width: 100%;
     }
 
-    #mystic-randomizer-a91f .mystic-mini-yao .mystic-yao-line {
+    #oracle-randomizer-b72d .mystic-mini-yao .mystic-yao-line {
       min-block-size: 0.75rem;
     }
 
-    #mystic-randomizer-a91f .mystic-hex-name {
+    #oracle-randomizer-b72d .mystic-hex-name {
       font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
       font-weight: 500;
     }
 
-    #mystic-randomizer-a91f .mystic-seal {
+    #oracle-randomizer-b72d .mystic-seal {
       display: grid;
       place-items: center;
       inline-size: 2.6rem;
@@ -1132,12 +1202,12 @@ html > body {
       transform: rotate(-3deg);
     }
 
-    #mystic-randomizer-a91f .mystic-result-list {
+    #oracle-randomizer-b72d .mystic-result-list {
       padding-inline: 1rem;
       border: 1px solid var(--mystic-line-strong);
     }
 
-    #mystic-randomizer-a91f .mystic-result-row {
+    #oracle-randomizer-b72d .mystic-result-row {
       display: grid;
       grid-template-columns: auto minmax(0, 1fr);
       gap: 1rem;
@@ -1146,37 +1216,37 @@ html > body {
       border-block-end: 1px solid var(--mystic-line-soft);
     }
 
-    #mystic-randomizer-a91f .mystic-result-row:last-child {
+    #oracle-randomizer-b72d .mystic-result-row:last-child {
       border-block-end: 0;
     }
 
-    #mystic-randomizer-a91f .mystic-result-rank {
+    #oracle-randomizer-b72d .mystic-result-rank {
       color: var(--foreground);
       font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
       white-space: nowrap;
     }
 
-    #mystic-randomizer-a91f .mystic-result-label {
+    #oracle-randomizer-b72d .mystic-result-label {
       overflow-wrap: anywhere;
     }
 
-    #mystic-randomizer-a91f .mystic-notice {
+    #oracle-randomizer-b72d .mystic-notice {
       padding: 0.7rem 0.8rem;
       border-block: 1px solid var(--mystic-line-soft);
       border-inline-start: 2px solid var(--primary);
     }
 
-    #mystic-randomizer-a91f section[data-view="ritual"] .mystic-field-meta {
+    #oracle-randomizer-b72d section[data-view="ritual"] .mystic-field-meta {
       padding-block-end: 0.75rem;
       border-block-end: 1px solid var(--mystic-line-soft);
     }
 
-    #mystic-randomizer-a91f section[data-view="result"] > .mystic-stack > .viz-row {
+    #oracle-randomizer-b72d section[data-view="result"] > .mystic-stack > .viz-row {
       padding-block: 0.7rem;
       border-block: 1px solid var(--mystic-line-soft);
     }
 
-    #mystic-randomizer-a91f .mystic-receipt-code {
+    #oracle-randomizer-b72d .mystic-receipt-code {
       display: block;
       max-inline-size: 100%;
       overflow-wrap: anywhere;
@@ -1184,36 +1254,325 @@ html > body {
       white-space: normal;
     }
 
-    #mystic-randomizer-a91f #mr-receipt table {
+    #oracle-randomizer-b72d #mr-receipt table {
       width: 100%;
       table-layout: fixed;
     }
 
-    #mystic-randomizer-a91f #mr-receipt th {
+    #oracle-randomizer-b72d #mr-receipt th {
       width: 6rem;
       padding-inline-end: 1rem;
       border-inline-end: 1px solid var(--mystic-line-soft);
     }
 
-    #mystic-randomizer-a91f #mr-receipt td {
+    #oracle-randomizer-b72d #mr-receipt td {
       padding-inline-start: 1rem;
     }
 
-    #mystic-randomizer-a91f #mr-receipt {
+    #oracle-randomizer-b72d #mr-receipt {
       padding: 0.8rem 1rem;
       border: 1px solid var(--mystic-line-strong);
     }
 
-    #mystic-randomizer-a91f details summary {
+    #oracle-randomizer-b72d details summary {
       cursor: pointer;
       color: var(--foreground);
       font-weight: 500;
     }
 
-    #mystic-randomizer-a91f details[open] summary {
+    #oracle-randomizer-b72d details[open] summary {
       margin-block-end: 0.85rem;
       padding-block-end: 0.75rem;
       border-block-end: 1px solid var(--mystic-line-soft);
+    }
+
+    #oracle-randomizer-b72d [hidden] {
+      display: none !important;
+    }
+
+    #oracle-randomizer-b72d .mystic-view {
+      min-inline-size: 0;
+    }
+
+    #oracle-randomizer-b72d .mystic-stagebar {
+      justify-content: flex-start;
+      gap: 0.6rem;
+      margin: 0 0 1.25rem;
+      padding: 0 0 0.85rem;
+      border: 0;
+      border-block-end: 1px solid var(--mystic-line-soft);
+      letter-spacing: 0;
+      list-style: none;
+    }
+
+    #oracle-randomizer-b72d .mystic-stagebar [data-stage-mark] {
+      display: flex;
+      align-items: center;
+      min-inline-size: max-content;
+      padding-block-end: 0.25rem;
+      border-block-end: 2px solid transparent;
+    }
+
+    #oracle-randomizer-b72d .mystic-stagebar [aria-current="step"] {
+      border-block-end-color: var(--primary);
+    }
+
+    #oracle-randomizer-b72d .mystic-stagebar [aria-current="step"]::before {
+      content: none;
+    }
+
+    #oracle-randomizer-b72d .mystic-stage-divider {
+      flex: 1;
+      inline-size: auto;
+      max-inline-size: 4rem;
+      background: var(--mystic-line-soft);
+    }
+
+    #oracle-randomizer-b72d .mystic-stage-divider::after {
+      display: none;
+    }
+
+    #oracle-randomizer-b72d .mystic-section-label {
+      display: block;
+      color: var(--primary);
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      letter-spacing: 0.14em;
+    }
+
+    #oracle-randomizer-b72d .mystic-entry {
+      display: grid;
+      gap: 0;
+    }
+
+    #oracle-randomizer-b72d .mystic-input-layout {
+      display: grid;
+      grid-template-columns: minmax(12rem, 0.72fr) minmax(0, 1.28fr);
+      min-inline-size: 0;
+    }
+
+    #oracle-randomizer-b72d .mystic-intent-column,
+    #oracle-randomizer-b72d .mystic-candidate-column {
+      display: grid;
+      align-content: start;
+      gap: 1rem;
+      min-inline-size: 0;
+      padding-block: 0.65rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-intent-column {
+      padding-inline: 0.35rem 1.25rem;
+      border-inline-end: 1px solid var(--mystic-line-strong);
+    }
+
+    #oracle-randomizer-b72d .mystic-candidate-column {
+      padding-inline: 1.25rem 0.35rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-entry-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-block-start: 0.75rem;
+      padding: 0.9rem 0.35rem 0.15rem;
+      border-block-start: 1px solid var(--mystic-line-soft);
+    }
+
+    #oracle-randomizer-b72d .mystic-error {
+      margin-block-start: 0.75rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-ritual-layout {
+      display: grid;
+      grid-template-columns: minmax(13rem, 0.72fr) minmax(18rem, 1.28fr);
+      align-items: center;
+      min-inline-size: 0;
+      padding-block: 0.5rem 1rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-ritual-copy {
+      display: grid;
+      align-content: center;
+      gap: 1.25rem;
+      min-inline-size: 0;
+      padding-inline-end: 1.5rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-oracle-field {
+      min-inline-size: 0;
+      padding-inline-start: 1.5rem;
+      border-inline-start: 1px solid var(--mystic-line-strong);
+    }
+
+    #oracle-randomizer-b72d .mystic-question-summary {
+      margin-block-start: 0.45rem;
+      padding: 0;
+      border: 0;
+      text-align: start;
+    }
+
+    #oracle-randomizer-b72d .mystic-oracle-disc {
+      width: min(100%, 21rem);
+    }
+
+    #oracle-randomizer-b72d .mystic-oracle-status {
+      padding: 0;
+      border: 0;
+      text-align: start;
+    }
+
+    #oracle-randomizer-b72d .mystic-moving-mark {
+      inset-inline-end: -1.65rem;
+      color: var(--primary);
+    }
+
+    #oracle-randomizer-b72d .mystic-result-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(14rem, 0.7fr);
+      align-items: stretch;
+      min-inline-size: 0;
+    }
+
+    #oracle-randomizer-b72d .mystic-result-primary {
+      position: relative;
+      display: grid;
+      align-content: center;
+      gap: 0.65rem;
+      min-inline-size: 0;
+      min-block-size: 12rem;
+      padding-inline-end: 4rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-result-heading-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    #oracle-randomizer-b72d .mystic-result-word {
+      margin: 0;
+      max-inline-size: 100%;
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      overflow-wrap: anywhere;
+    }
+
+    #oracle-randomizer-b72d .mystic-result-primary .mystic-seal {
+      position: absolute;
+      inset-inline-end: 1rem;
+      inset-block-end: 1rem;
+      inline-size: 3rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-result-oracle {
+      display: grid;
+      align-content: center;
+      gap: 1rem;
+      min-inline-size: 0;
+      padding-inline-start: 1.5rem;
+      border-inline-start: 1px solid var(--mystic-line-strong);
+    }
+
+    #oracle-randomizer-b72d .mystic-mini-yao {
+      width: min(100%, 8rem);
+    }
+
+    #oracle-randomizer-b72d .mystic-hex-copy {
+      display: grid;
+      gap: 0.35rem;
+      min-inline-size: 0;
+    }
+
+    #oracle-randomizer-b72d .mystic-result-list {
+      padding-inline: 0;
+      border: 0;
+      border-block: 1px solid var(--mystic-line-soft);
+    }
+
+    #oracle-randomizer-b72d .mystic-result-reading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    #oracle-randomizer-b72d .mystic-notice {
+      padding-block: 0.25rem;
+      border-block: 0;
+    }
+
+    #oracle-randomizer-b72d section[data-view="result"] > .mystic-stack > .viz-row {
+      padding-block: 0;
+      border-block: 0;
+    }
+
+    #oracle-randomizer-b72d .mystic-result-actions {
+      padding-block-start: 0.15rem;
+    }
+
+    #oracle-randomizer-b72d #mr-receipt {
+      padding: 1rem 0 0;
+      border: 0;
+      border-block-start: 1px solid var(--mystic-line-strong);
+    }
+
+    #oracle-randomizer-b72d #mr-receipt th {
+      border-inline-end: 0;
+    }
+
+    #oracle-randomizer-b72d #mr-receipt td {
+      padding-inline-start: 0;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      #oracle-randomizer-b72d .mystic-view.is-active-view {
+        animation: mystic-view-rise 420ms cubic-bezier(0.22, 0.72, 0.2, 1);
+      }
+
+      #oracle-randomizer-b72d #mr-yao-stack .mystic-yao-line.is-drawn {
+        animation: mystic-yao-land 360ms cubic-bezier(0.22, 0.72, 0.2, 1);
+      }
+
+      #oracle-randomizer-b72d .mystic-oracle-disc.is-casting::after {
+        animation: mystic-oracle-breathe 1.2s ease-in-out;
+      }
+    }
+
+    @keyframes mystic-view-rise {
+      from {
+        opacity: 0.55;
+        transform: translateY(0.5rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes mystic-yao-land {
+      0% {
+        opacity: 0.15;
+        transform: translateY(-0.4rem) scaleX(0.68);
+      }
+      72% {
+        opacity: 1;
+        transform: translateY(0.06rem) scaleX(1.03);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scaleX(1);
+      }
+    }
+
+    @keyframes mystic-oracle-breathe {
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 transparent;
+      }
+      55% {
+        box-shadow: 0 0 0 0.75rem color-mix(in srgb, var(--primary) 8%, transparent);
+      }
     }
 
     @keyframes mystic-disc-turn {
@@ -1226,56 +1585,99 @@ html > body {
     }
 
     @media (max-width: 520px) {
-      #mystic-randomizer-a91f .mystic-form-grid,
-      #mystic-randomizer-a91f .mystic-oracle-summary {
+      #oracle-randomizer-b72d .mystic-input-layout,
+      #oracle-randomizer-b72d .mystic-ritual-layout,
+      #oracle-randomizer-b72d .mystic-result-layout,
+      #oracle-randomizer-b72d .mystic-result-reading {
         grid-template-columns: 1fr;
       }
 
-      #mystic-randomizer-a91f .mystic-form-grid > .form-label + .form-label {
-        padding-inline-start: 0;
-        padding-block-start: 0.85rem;
-        border-inline-start: 0;
-        border-block-start: 1px solid var(--mystic-line-soft);
-      }
-
-      #mystic-randomizer-a91f .mystic-stagebar {
+      #oracle-randomizer-b72d .mystic-stagebar {
         gap: 0.45rem;
       }
 
-      #mystic-randomizer-a91f .mystic-stage-divider {
-        inline-size: 1rem;
+      #oracle-randomizer-b72d .mystic-stage-divider {
+        max-inline-size: 1.25rem;
       }
 
-      #mystic-randomizer-a91f .mystic-stage-long {
+      #oracle-randomizer-b72d .mystic-stage-long {
         display: none;
       }
 
-      #mystic-randomizer-a91f .mystic-stage-short {
+      #oracle-randomizer-b72d .mystic-stage-short {
         display: inline;
       }
 
-      #mystic-randomizer-a91f .mystic-mini-yao {
-        width: min(100%, 10rem);
+      #oracle-randomizer-b72d .mystic-intent-column {
+        padding: 0.5rem 0.35rem 1rem;
+        border-inline-end: 0;
+        border-block-end: 1px solid var(--mystic-line-strong);
       }
 
-      #mystic-randomizer-a91f #mr-receipt {
-        padding: 0.65rem;
+      #oracle-randomizer-b72d .mystic-candidate-column {
+        padding: 1rem 0.35rem 0.5rem;
       }
 
-      #mystic-randomizer-a91f #mr-receipt th {
+      #oracle-randomizer-b72d .mystic-entry-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      #oracle-randomizer-b72d .mystic-ritual-copy {
+        padding: 0 0 1.25rem;
+      }
+
+      #oracle-randomizer-b72d .mystic-oracle-field {
+        padding: 1.25rem 0 0;
+        border-inline-start: 0;
+        border-block-start: 1px solid var(--mystic-line-strong);
+      }
+
+      #oracle-randomizer-b72d .mystic-oracle-disc {
+        width: min(100%, 19rem);
+      }
+
+      #oracle-randomizer-b72d .mystic-result-primary {
+        min-block-size: 10rem;
+        padding-inline-end: 3.75rem;
+      }
+
+      #oracle-randomizer-b72d .mystic-result-oracle {
+        grid-template-columns: minmax(7rem, 8rem) minmax(0, 1fr);
+        align-items: center;
+        padding: 1.25rem 0 0;
+        border-inline-start: 0;
+        border-block-start: 1px solid var(--mystic-line-strong);
+      }
+
+      #oracle-randomizer-b72d .mystic-mini-yao {
+        width: min(100%, 8rem);
+      }
+
+      #oracle-randomizer-b72d #mr-receipt {
+        padding: 1rem 0 0;
+      }
+
+      #oracle-randomizer-b72d #mr-receipt th {
         width: 4.5rem;
         padding-inline-end: 0.65rem;
       }
 
-      #mystic-randomizer-a91f #mr-receipt td {
-        padding-inline-start: 0.65rem;
+      #oracle-randomizer-b72d #mr-receipt td {
+        padding-inline-start: 0;
+      }
+    }
+
+    @media (max-width: 360px) {
+      #oracle-randomizer-b72d .mystic-result-oracle {
+        grid-template-columns: 1fr;
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      #mystic-randomizer-a91f *,
-      #mystic-randomizer-a91f *::before,
-      #mystic-randomizer-a91f *::after {
+      #oracle-randomizer-b72d *,
+      #oracle-randomizer-b72d *::before,
+      #oracle-randomizer-b72d *::after {
         scroll-behavior: auto !important;
         animation-duration: 1ms !important;
         transition-duration: 1ms !important;
@@ -1283,41 +1685,45 @@ html > body {
     }
   </style>
 
-  <div class="mystic-stagebar text-small" aria-label="起签进度">
-    <span data-stage-mark="input" aria-current="step" aria-label="第一步：立题">
-      <span class="mystic-stage-long">壹 · 立题</span>
-      <span class="mystic-stage-short" aria-hidden="true">立题</span>
-    </span>
-    <span class="mystic-stage-divider" aria-hidden="true"></span>
-    <span data-stage-mark="ritual" aria-label="第二步：起卦">
-      <span class="mystic-stage-long">贰 · 起卦</span>
-      <span class="mystic-stage-short" aria-hidden="true">起卦</span>
-    </span>
-    <span class="mystic-stage-divider" aria-hidden="true"></span>
-    <span data-stage-mark="result" aria-label="第三步：揭签">
-      <span class="mystic-stage-long">叁 · 揭签</span>
-      <span class="mystic-stage-short" aria-hidden="true">揭签</span>
-    </span>
-  </div>
+  <nav aria-label="起签进度">
+    <ol class="mystic-stagebar text-small">
+      <li data-stage-mark="input" aria-current="step" aria-label="第一步：立题">
+        <span class="mystic-stage-long">壹 · 立题</span>
+        <span class="mystic-stage-short" aria-hidden="true">壹</span>
+      </li>
+      <li class="mystic-stage-divider" aria-hidden="true"></li>
+      <li data-stage-mark="ritual" aria-label="第二步：起卦">
+        <span class="mystic-stage-long">贰 · 起卦</span>
+        <span class="mystic-stage-short" aria-hidden="true">贰</span>
+      </li>
+      <li class="mystic-stage-divider" aria-hidden="true"></li>
+      <li data-stage-mark="result" aria-label="第三步：揭签">
+        <span class="mystic-stage-long">叁 · 揭签</span>
+        <span class="mystic-stage-short" aria-hidden="true">叁</span>
+      </li>
+    </ol>
+  </nav>
 
-  <section data-view="input" aria-label="输入选项">
-    <div class="card">
-      <form id="mr-form" class="mystic-stack" novalidate>
-        <div class="mystic-form-grid">
+  <section class="mystic-view" data-view="input" aria-label="输入选项">
+    <form id="mr-form" class="card mystic-entry" novalidate>
+      <div class="mystic-input-layout">
+        <div class="mystic-intent-column">
+          <span class="mystic-section-label text-small">所问</span>
+
           <label class="form-label" for="mr-question">
-            所问之事
+            问一件事
             <input
               id="mr-question"
               class="form-control"
               type="text"
               maxlength="80"
               value="今天中午吃什么？"
-              placeholder="可不填"
+              placeholder="可不填，只凭当下一念"
             />
           </label>
 
           <label class="form-label" for="mr-count">
-            取几签
+            最终取几项
             <input
               id="mr-count"
               class="form-control"
@@ -1330,14 +1736,17 @@ html > body {
           </label>
         </div>
 
-        <label class="form-label" for="mr-options">
-          候选签
-          <textarea
-            id="mr-options"
-            class="form-control"
-            spellcheck="false"
-            aria-describedby="mr-options-help mr-error"
-          >海南鸡饭
+        <div class="mystic-candidate-column">
+          <span class="mystic-section-label text-small">列签</span>
+
+          <label class="form-label" for="mr-options">
+            候选选项
+            <textarea
+              id="mr-options"
+              class="form-control"
+              spellcheck="false"
+              aria-describedby="mr-options-help mr-error"
+            >海南鸡饭
 牛肉面
 麻辣烫
 寿司
@@ -1345,32 +1754,55 @@ html > body {
 烧腊饭
 韩式拌饭
 沙拉</textarea>
-        </label>
+          </label>
 
-        <div class="mystic-field-meta">
-          <span id="mr-options-help" class="text-small text-muted">每行一个选项；重复项默认不作为权重。</span>
-          <span id="mr-option-total" class="viz-badge" aria-live="polite">8 项候选</span>
+          <div class="mystic-field-meta">
+            <span id="mr-options-help" class="text-small text-muted">每行一个选项；重复项需删除，不会作为加权方式。</span>
+            <span id="mr-option-total" class="viz-badge" aria-live="polite">8 项候选</span>
+          </div>
         </div>
+      </div>
 
-        <p id="mr-error" class="mystic-error text-destructive" role="alert"></p>
+      <p id="mr-error" class="mystic-error text-destructive" role="alert"></p>
 
+      <div class="mystic-entry-footer">
+        <span class="text-small text-muted">封签后，本局名单即定。</span>
         <div class="viz-controls">
-          <button id="mr-seal-button" class="btn btn-primary" type="submit">封签入局</button>
+          <button id="mr-seal-button" class="btn btn-primary" type="submit">封签 · 入局</button>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </section>
 
-  <section data-view="ritual" aria-label="起卦" hidden>
-    <div class="card">
-      <div class="mystic-stack">
+  <section class="mystic-view" data-view="ritual" aria-label="起卦" hidden>
+    <div class="mystic-ritual-layout">
+      <div class="mystic-ritual-copy">
         <div class="mystic-field-meta">
           <span class="viz-badge">本局已封</span>
           <span id="mr-ritual-meta" class="text-small text-muted"></span>
         </div>
 
-        <div id="mr-question-summary" class="mystic-question-summary"></div>
+        <div>
+          <span class="mystic-section-label text-small">所问</span>
+          <h2 id="mr-question-summary" class="mystic-question-summary"></h2>
+        </div>
 
+        <div
+          id="mr-oracle-status"
+          class="mystic-oracle-status text-muted"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          静一息，再以当下一念起卦。
+        </div>
+
+        <div class="viz-controls">
+          <button id="mr-cast" class="btn btn-primary" type="button">起卦 · 落签</button>
+          <button id="mr-back-input" class="btn btn-ghost" type="button">返回修改</button>
+        </div>
+      </div>
+
+      <div class="mystic-oracle-field">
         <div
           id="mr-oracle-disc"
           class="mystic-oracle-disc"
@@ -1389,55 +1821,54 @@ html > body {
           </div>
           <div id="mr-yao-stack" class="mystic-yao-stack" aria-hidden="true"></div>
         </div>
-
-        <div id="mr-oracle-status" class="mystic-oracle-status text-muted" aria-live="polite">
-          静一息，再以当下一念起卦。
-        </div>
-
-        <div class="viz-controls">
-          <button id="mr-cast" class="btn btn-primary" type="button">此刻起卦</button>
-          <button id="mr-back-input" class="btn" type="button">返回修改</button>
-        </div>
       </div>
     </div>
   </section>
 
-  <section data-view="result" aria-label="揭签结果" hidden>
+  <section class="mystic-view" data-view="result" aria-label="揭签结果" hidden>
     <div class="mystic-stack">
-      <div class="mystic-oracle-summary">
-        <div
-          id="mr-result-yao"
-          class="mystic-mini-yao"
-          role="img"
-          aria-label="本局六爻"
-        ></div>
-        <div class="mystic-stack">
-          <div class="viz-row">
-            <span id="mr-seal" class="mystic-seal" aria-hidden="true">签</span>
+      <div class="mystic-result-layout">
+        <div class="card mystic-result-primary">
+          <div class="mystic-result-heading-row">
+            <span class="mystic-section-label text-small">主签</span>
             <span id="mr-accepted" class="viz-badge" hidden>此签已定</span>
           </div>
-          <div id="mr-hex-name" class="mystic-hex-name"></div>
-          <div id="mr-hex-change" class="text-small text-muted"></div>
+          <h1
+            id="mr-primary-result"
+            class="mystic-result-word"
+            aria-live="polite"
+            aria-atomic="true"
+          ></h1>
+          <div id="mr-result-question" class="text-small text-muted"></div>
+          <span id="mr-seal" class="mystic-seal" aria-hidden="true">定</span>
         </div>
-      </div>
 
-      <div class="card viz-stat">
-        <div class="text-muted">主签</div>
-        <div id="mr-primary-result" class="viz-stat-value"></div>
-        <div id="mr-result-question" class="text-small text-muted"></div>
+        <div class="mystic-result-oracle">
+          <div
+            id="mr-result-yao"
+            class="mystic-mini-yao"
+            role="img"
+            aria-label="本局六爻"
+          ></div>
+          <div class="mystic-hex-copy">
+            <div id="mr-hex-name" class="mystic-hex-name"></div>
+            <div id="mr-hex-change" class="text-small text-muted"></div>
+          </div>
+        </div>
       </div>
 
       <div id="mr-companions" class="mystic-result-list" hidden></div>
 
-      <div id="mr-interpretation" class="mystic-notice"></div>
-
-      <div class="viz-row">
-        <span id="mr-probability-badge" class="viz-badge"></span>
-        <span class="viz-badge">无放回</span>
-        <span class="viz-badge">本地计算</span>
+      <div class="mystic-result-reading">
+        <div id="mr-interpretation" class="mystic-notice"></div>
+        <div class="viz-row">
+          <span id="mr-probability-badge" class="viz-badge"></span>
+          <span class="viz-badge">无放回</span>
+          <span class="viz-badge">本地计算</span>
+        </div>
       </div>
 
-      <div class="viz-controls">
+      <div class="viz-controls mystic-result-actions">
         <button id="mr-accept" class="btn btn-primary" type="button">就依此签</button>
         <button id="mr-redraw" class="btn" type="button">另起一局</button>
         <button id="mr-edit" class="btn btn-ghost" type="button">修改选项</button>
@@ -1505,7 +1936,7 @@ html > body {
 
   <script>
     (function () {
-      const root = document.getElementById("mystic-randomizer-a91f");
+      const root = document.getElementById("oracle-randomizer-b72d");
       if (!root || root.dataset.ready === "true") return;
       root.dataset.ready = "true";
 
@@ -1526,6 +1957,7 @@ html > body {
 
       const views = Array.from(root.querySelectorAll("[data-view]"));
       const stageMarks = Array.from(root.querySelectorAll("[data-stage-mark]"));
+      const ritualView = root.querySelector('[data-view="ritual"]');
       const form = root.querySelector("#mr-form");
       const questionInput = root.querySelector("#mr-question");
       const optionsInput = root.querySelector("#mr-options");
@@ -1570,7 +2002,9 @@ html > body {
 
       function showView(name) {
         views.forEach((view) => {
-          view.hidden = view.dataset.view !== name;
+          const isCurrent = view.dataset.view === name;
+          view.hidden = !isCurrent;
+          view.classList.toggle("is-active-view", isCurrent);
         });
         stageMarks.forEach((mark) => {
           if (mark.dataset.stageMark === name) {
@@ -2298,6 +2732,8 @@ html > body {
         if (!sealed || castButton.disabled) return;
         castButton.disabled = true;
         backInputButton.disabled = true;
+        ritualView.setAttribute("aria-busy", "true");
+        oracleDisc.setAttribute("aria-busy", "true");
         oracleStatus.textContent = "正在取数起卦。";
 
         try {
@@ -2305,7 +2741,6 @@ html > body {
           await animateOracle(currentDraw);
           renderResult(currentDraw);
           showView("result");
-          acceptButton.focus();
         } catch (error) {
           oracleStatus.textContent = error instanceof Error
             ? error.message
@@ -2313,6 +2748,8 @@ html > body {
         } finally {
           castButton.disabled = false;
           backInputButton.disabled = false;
+          ritualView.removeAttribute("aria-busy");
+          oracleDisc.removeAttribute("aria-busy");
         }
       }
 
@@ -2469,6 +2906,7 @@ html > body {
       updateOptionCount();
       autoGrowOptions();
       buildEmptyYaoStack(ritualYaoStack);
+      showView("input");
 
       root.__mysticRandomizer = {
         computeDraw,
@@ -2483,5 +2921,6 @@ html > body {
   </script>
 </div>
 
+</main>
 </body>
 </html>
