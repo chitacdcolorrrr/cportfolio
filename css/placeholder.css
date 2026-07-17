@@ -121,7 +121,27 @@ body::after {
 }
 
 .brand {
+    position: relative;
+    color: #f4f8fa;
     font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.brand::before {
+    content: '';
+    position: absolute;
+    inset: -0.95rem -0.75rem;
+}
+
+.brand:visited {
+    color: #f4f8fa;
+}
+
+.brand:focus-visible {
+    outline: 2px solid rgb(var(--accent));
+    outline-offset: 0.4rem;
+    border-radius: 0.1rem;
 }
 
 .page-marker {
@@ -259,6 +279,10 @@ body::after {
 }
 
 @media (hover: hover) {
+    .brand:hover {
+        opacity: 0.72;
+    }
+
     .home-link:hover::after {
         transform: scaleX(1);
     }

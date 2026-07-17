@@ -68,6 +68,30 @@ body::after {
     animation: home-reveal 0.7s ease-out 0.1s both;
 }
 
+.site-brand-link {
+    position: relative;
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+    transition: opacity 0.2s ease;
+}
+
+.site-brand-link::before {
+    content: '';
+    position: absolute;
+    inset: -0.95rem -0.75rem;
+}
+
+.site-brand-link:visited {
+    color: inherit;
+}
+
+.site-brand-link:focus-visible {
+    outline: 2px solid #f4f8fa;
+    outline-offset: 0.4rem;
+    border-radius: 0.1rem;
+}
+
 .home-nav {
     position: absolute;
     z-index: 2;
@@ -173,6 +197,10 @@ body::after {
 }
 
 @media (hover: hover) {
+    .site-brand-link:hover {
+        opacity: 0.72;
+    }
+
     .home-nav a:hover::after {
         transform: scaleX(1);
     }
@@ -206,6 +234,10 @@ body::after {
     .home-nav a,
     #subtitle {
         animation: none;
+    }
+
+    .site-brand-link {
+        transition: none;
     }
 }
 
