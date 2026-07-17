@@ -1,6 +1,19 @@
 @import url('/fonts/taipei-sans-tc/Regular/TaipeiSansTCBeta-Regular.css');
 @import url('/fonts/taipei-sans-tc/Bold/TaipeiSansTCBeta-Bold.css');
 
+@font-face {
+    font-family: 'Geist';
+    src: url('/fonts/geist/Geist-Variable.woff2') format('woff2');
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+}
+
+:root {
+    --font-latin: 'Geist', 'Taipei Sans TC', sans-serif;
+    --font-cjk: 'Taipei Sans TC', sans-serif;
+}
+
 html {
     font-size: 16px;
 }
@@ -13,10 +26,15 @@ body, html {
     display: flex;
     justify-content: center;
     align-items: center;
-    font-family: 'Taipei Sans TC', sans-serif;
+    font-family: var(--font-latin);
+    font-synthesis: none;
     /* Background image settings */
     background: #f0f0f0 url('/images/background.jpeg') no-repeat fixed center center;
     background-size: cover; /* Ensures the image covers the entire background */
+}
+
+:lang(zh) {
+    font-family: var(--font-cjk);
 }
 
 .container {
@@ -37,7 +55,7 @@ body, html {
 }
 
 #title {
-    font-family: 'Taipei Sans TC', sans-serif;
+    font-family: var(--font-latin);
     font-weight: 700;
     color: #FFFFFF;
     font-size: calc(4.5vw);
@@ -55,7 +73,7 @@ body, html {
 }
 
 #subtitle, #element1, #element2, #element3, #element4, #element5 {
-    font-family: 'Taipei Sans TC', sans-serif;
+    font-family: var(--font-latin);
     color: #FFFFFF;
     text-align: center;
     white-space: nowrap;
