@@ -3,28 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#07141d">
     <title>AH</title>
-    <meta name="description" content="Personal portfolio and gallery website by tnyh0330">
-    <link rel="icon" href="images/favicon.jpg" type="image/jpeg">
-    <link rel="stylesheet" href="css/styles.css">
+    <meta name="description" content="Personal portfolio and gallery by tnyh0330.">
+    <link rel="icon" href="/images/favicon.jpg" type="image/jpeg">
+    <link rel="stylesheet" href="/css/styles.css?v=20260718-14">
+    <script src="/js/home.js" defer></script>
 </head>
-<body>
-<header class="site-header">
-    <h1 id="title" class="site-brand"><a class="site-brand-link" href="/index.html">TNYH0330</a></h1>
+<body class="home-page" data-scene="index">
+<div class="home-scene" aria-hidden="true">
+    <div class="home-scene-image scene-cold"></div>
+    <div class="home-scene-image scene-warm"></div>
+</div>
+
+<header class="home-header">
+    <a class="home-brand" href="/index.html" aria-label="TNYH0330 home">TNYH0330</a>
+    <p class="index-marker"><span>00 / 04</span> index.</p>
 </header>
 
-<nav class="home-nav" aria-label="Portfolio sections">
-    <a href="/whoami.html" id="element1">Freelancer Folio</a>
-    <a href="/lived.html" id="element3">lived.</a>
-    <a href="/loved.html" id="element4">loved.</a>
-    <a href="/created.html" id="element5">created.</a>
-</nav>
+<main class="home-main">
+    <h1 class="visually-hidden">TNYH0330</h1>
 
-<footer class="subtitle-container">
-    <p id="subtitle">
+    <nav class="index-nav" aria-label="Portfolio sections">
+        <a class="index-link" href="/whoami.html" data-scene="whoami" style="--item-accent: 185, 229, 239;">
+            <span class="index-number">01</span>
+            <span class="index-title">
+                <span class="index-name">whoami.</span>
+                <span class="index-arrow" aria-hidden="true">↗</span>
+            </span>
+        </a>
+
+        <a class="index-link" href="/lived.html" data-scene="lived" style="--item-accent: 169, 199, 216;">
+            <span class="index-number">02</span>
+            <span class="index-title">
+                <span class="index-name">lived.</span>
+                <span class="index-arrow" aria-hidden="true">↗</span>
+            </span>
+        </a>
+
+        <a class="index-link" href="/loved.html" data-scene="loved" style="--item-accent: 214, 155, 106;">
+            <span class="index-number">03</span>
+            <span class="index-title">
+                <span class="index-name">loved.</span>
+                <span class="index-arrow" aria-hidden="true">↗</span>
+            </span>
+        </a>
+
+        <a class="index-link" href="/created.html" data-scene="created" style="--item-accent: 168, 196, 255;">
+            <span class="index-number">04</span>
+            <span class="index-title">
+                <span class="index-name">created.</span>
+                <span class="index-arrow" aria-hidden="true">↗</span>
+            </span>
+        </a>
+    </nav>
+</main>
+
+<footer class="home-footer">
+    <p class="home-manifesto">
         <span>Life vibrant full of vitality</span>
         <span lang="zh-CN">生命鲜活涌动</span>
     </p>
+    <p class="home-domain">tnyh0330.com</p>
 </footer>
 </body>
 </html>
