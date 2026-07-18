@@ -70,6 +70,12 @@ body[data-scene='created'] {
     font-family: var(--font-cjk);
 }
 
+.js:not(.intro-ready) .home-header,
+.js:not(.intro-ready) .home-main,
+.js:not(.intro-ready) .home-footer {
+    visibility: hidden;
+}
+
 .home-scene,
 .home-scene-image,
 body::before,
@@ -115,6 +121,15 @@ body::after {
         rgba(0, 0, 0, 0.97) 83%,
         #000 100%
     );
+}
+
+.js:not(.intro-ready) .home-scene::after {
+    opacity: 0;
+    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: blur(0);
+}
+
+.js.intro-ready .home-scene::after {
     animation: scene-blur-reveal 0.56s var(--reveal-ease) var(--reveal-blur-at) backwards;
 }
 
@@ -135,15 +150,18 @@ body::after {
 .scene-cold {
     z-index: 1;
     opacity: 1;
-    background-image: url('/images/background.jpeg?v=20260718-dscf7582');
+    background-image: url('/images/home-background.webp?v=20260718-home-1');
 }
 
 .scene-warm {
     z-index: 2;
     opacity: 0;
-    background-image: url('/images/loved_background.jpg');
     background-position: 43% center;
     filter: saturate(0.78) brightness(0.82);
+}
+
+body.warm-scene-ready .scene-warm {
+    background-image: url('/images/home-loved-background.webp?v=20260718-home-1');
 }
 
 body[data-scene='whoami'] .scene-cold {
@@ -163,11 +181,11 @@ body[data-scene='created'] .scene-cold {
     transform: scale(1.035);
 }
 
-body[data-scene='loved'] .scene-cold {
+body.warm-scene-ready[data-scene='loved'] .scene-cold {
     opacity: 0;
 }
 
-body[data-scene='loved'] .scene-warm {
+body.warm-scene-ready[data-scene='loved'] .scene-warm {
     opacity: 1;
     transform: scale(1.035);
 }
@@ -226,6 +244,9 @@ body::after {
     font-weight: 700;
     text-decoration: none;
     transition: opacity 0.2s ease;
+}
+
+.js.intro-ready .home-brand {
     animation: brand-reveal 0.72s var(--reveal-ease) var(--reveal-brand-at) backwards;
 }
 
@@ -251,6 +272,9 @@ body::after {
     gap: 0.9rem;
     margin: 0;
     color: rgba(244, 248, 250, 0.82);
+}
+
+.js.intro-ready .index-marker {
     animation: meta-reveal 0.56s var(--reveal-ease) var(--reveal-meta-at) backwards;
 }
 
@@ -279,6 +303,9 @@ body::after {
     padding: clamp(0.1rem, 0.3vh, 0.18rem) 0;
     color: var(--paper);
     text-decoration: none;
+}
+
+.js.intro-ready .index-link {
     animation: index-reveal 0.68s var(--reveal-ease) var(--reveal-delay) backwards;
 }
 
@@ -398,12 +425,27 @@ body::after {
     margin: 0;
     text-transform: none;
     letter-spacing: 0.02em;
+}
+
+.js.intro-ready .home-manifesto {
     animation: meta-reveal 0.56s var(--reveal-ease) var(--reveal-meta-at) backwards;
 }
 
 .home-domain {
     margin: 0;
+}
+
+.js.intro-ready .home-domain {
     animation: meta-reveal 0.56s var(--reveal-ease) var(--reveal-meta-at) backwards;
+}
+
+.js.intro-skip .home-scene::after,
+.js.intro-skip .home-brand,
+.js.intro-skip .index-marker,
+.js.intro-skip .index-link,
+.js.intro-skip .home-manifesto,
+.js.intro-skip .home-domain {
+    animation: none;
 }
 
 .visually-hidden {

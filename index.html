@@ -7,8 +7,23 @@
     <title>AH</title>
     <meta name="description" content="Personal portfolio and gallery by tnyh0330.">
     <link rel="icon" href="/images/favicon.jpg" type="image/jpeg">
-    <link rel="stylesheet" href="/css/styles.css?v=20260718-14">
-    <script src="/js/home.js" defer></script>
+    <script>
+        document.documentElement.classList.add('js');
+        window.revealIntroFallback = () => {
+            window.clearTimeout(window.introFallbackTimer);
+            document.documentElement.classList.add('intro-ready', 'intro-skip');
+        };
+        window.introFallbackTimer = window.setTimeout(window.revealIntroFallback, 8000);
+    </script>
+    <link
+        rel="preload"
+        href="/images/home-background.webp?v=20260718-home-1"
+        as="image"
+        type="image/webp"
+        fetchpriority="high"
+    >
+    <link rel="stylesheet" href="/css/styles.css?v=20260718-15">
+    <script src="/js/home.js?v=20260718-2" defer onerror="window.revealIntroFallback()"></script>
 </head>
 <body class="home-page" data-scene="index">
 <div class="home-scene" aria-hidden="true">
