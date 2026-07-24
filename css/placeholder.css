@@ -21,7 +21,7 @@ html {
 }
 
 body {
-    --page-image: url('../images/background.jpeg');
+    --page-image: url('/images/home-background.webp');
     --page-position: center center;
     --accent: 185, 229, 239;
     --veil: 4, 10, 14;
@@ -46,7 +46,7 @@ body {
 }
 
 .page-loved {
-    --page-image: url('../images/loved_background.jpg');
+    --page-image: url('/images/home-loved-background.webp');
     --page-position: 38% center;
     --accent: 214, 155, 106;
     --veil: 12, 9, 7;
