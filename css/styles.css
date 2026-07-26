@@ -19,12 +19,12 @@
     --veil: 4, 10, 14;
     --page-inset: clamp(1.25rem, 3vw, 3rem);
     --scene-blur: clamp(2rem, 4vw, 3.5rem);
-    --reveal-brand-at: 0.48s;
-    --reveal-blur-at: 1.2s;
-    --reveal-sections-at: 1.86s;
-    --reveal-step: 0.17s;
-    --reveal-meta-at: 3.14s;
+    --reveal-blur-at: 0.6s;
+    --reveal-sections-at: 2.6s;
+    --reveal-step: 0.12s;
+    --reveal-meta-at: 3.5s;
     --reveal-ease: cubic-bezier(0.22, 0.7, 0.2, 1);
+    --fog-ease: cubic-bezier(0.5, 0.05, 0.35, 1);
 }
 
 * {
@@ -74,6 +74,10 @@ body[data-scene='created'] {
 .js:not(.intro-ready) .home-main,
 .js:not(.intro-ready) .home-footer {
     visibility: hidden;
+}
+
+.js:not(.intro-ready) .home-brand {
+    visibility: visible;
 }
 
 .home-scene,
@@ -130,7 +134,9 @@ body::after {
 }
 
 .js.intro-ready .home-scene::after {
-    animation: scene-blur-reveal 0.56s var(--reveal-ease) var(--reveal-blur-at) backwards;
+    animation:
+        fog-fade 0.8s ease-out var(--reveal-blur-at) backwards,
+        fog-thicken 2.4s var(--fog-ease) var(--reveal-blur-at) backwards;
 }
 
 .home-scene-image {
@@ -246,10 +252,6 @@ body::after {
     transition: opacity 0.2s ease;
 }
 
-.js.intro-ready .home-brand {
-    animation: brand-reveal 0.72s var(--reveal-ease) var(--reveal-brand-at) backwards;
-}
-
 .home-brand::before {
     content: '';
     position: absolute;
@@ -275,7 +277,7 @@ body::after {
 }
 
 .js.intro-ready .index-marker {
-    animation: meta-reveal 0.56s var(--reveal-ease) var(--reveal-meta-at) backwards;
+    animation: meta-reveal 0.85s var(--reveal-ease) var(--reveal-meta-at) backwards;
 }
 
 .index-marker span {
@@ -306,7 +308,7 @@ body::after {
 }
 
 .js.intro-ready .index-link {
-    animation: index-reveal 0.68s var(--reveal-ease) var(--reveal-delay) backwards;
+    animation: index-reveal 0.85s var(--reveal-ease) var(--reveal-delay) backwards;
 }
 
 .index-link:nth-child(2) {
@@ -428,7 +430,7 @@ body::after {
 }
 
 .js.intro-ready .home-manifesto {
-    animation: meta-reveal 0.56s var(--reveal-ease) var(--reveal-meta-at) backwards;
+    animation: meta-reveal 0.85s var(--reveal-ease) var(--reveal-meta-at) backwards;
 }
 
 .home-domain {
@@ -436,11 +438,10 @@ body::after {
 }
 
 .js.intro-ready .home-domain {
-    animation: meta-reveal 0.56s var(--reveal-ease) var(--reveal-meta-at) backwards;
+    animation: meta-reveal 0.85s var(--reveal-ease) var(--reveal-meta-at) backwards;
 }
 
 .js.intro-skip .home-scene::after,
-.js.intro-skip .home-brand,
 .js.intro-skip .index-marker,
 .js.intro-skip .index-link,
 .js.intro-skip .home-manifesto,
@@ -573,17 +574,14 @@ body::after {
     }
 }
 
-@keyframes brand-reveal {
+@keyframes fog-fade {
     from {
         opacity: 0;
-        filter: blur(0.5rem);
-        transform: translateY(0.12rem);
     }
 }
 
-@keyframes scene-blur-reveal {
+@keyframes fog-thicken {
     from {
-        opacity: 0;
         -webkit-backdrop-filter: blur(0);
         backdrop-filter: blur(0);
     }
