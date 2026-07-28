@@ -1,11 +1,7 @@
-const root = document.documentElement;
 const page = document.body;
 const index = document.querySelector('.index-nav');
 const entries = document.querySelectorAll('.index-link[data-scene]');
-const homeBackground = '/images/home-background.webp?v=20260718-home-1';
 const warmBackground = '/images/home-loved-background.webp?v=20260718-home-1';
-const introTimeout = 6000;
-const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let warmScenePromise;
 
@@ -31,39 +27,6 @@ function preloadImage(source, fetchPriority = 'auto') {
     });
 }
 
-function withTimeout(promise, duration) {
-    return new Promise((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
-            reject(new Error('Image load timed out'));
-        }, duration);
-
-        promise.then(
-            (value) => {
-                window.clearTimeout(timeout);
-                resolve(value);
-            },
-            (error) => {
-                window.clearTimeout(timeout);
-                reject(error);
-            }
-        );
-    });
-}
-
-function revealIntro(skipAnimation = false) {
-    window.clearTimeout(window.introFallbackTimer);
-
-    window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-            if (skipAnimation) {
-                root.classList.add('intro-skip');
-            }
-
-            root.classList.add('intro-ready');
-        });
-    });
-}
-
 function prepareWarmScene() {
     if (!warmScenePromise) {
         warmScenePromise = preloadImage(warmBackground, 'low')
@@ -86,30 +49,6 @@ function scheduleWarmScene() {
     }
 
     window.setTimeout(prepareWarmScene, 3800);
-}
-
-async function prepareIntro() {
-    if (reduceMotion) {
-        revealIntro(true);
-
-        try {
-            await withTimeout(preloadImage(homeBackground, 'high'), introTimeout);
-        } catch {
-            // Content is already visible; the background can continue loading independently.
-        }
-
-        scheduleWarmScene();
-        return;
-    }
-
-    try {
-        await withTimeout(preloadImage(homeBackground, 'high'), introTimeout);
-        revealIntro();
-    } catch {
-        revealIntro(true);
-    }
-
-    scheduleWarmScene();
 }
 
 function showScene(entry) {
@@ -138,4 +77,6 @@ index.addEventListener('focusout', (event) => {
 
 window.addEventListener('pageshow', showIndexScene);
 
-prepareIntro();
+// The intro reveal itself is owned by js/loader.js (asset preloading +
+// percentage counter). Warm up the hover scene once the browser is idle.
+scheduleWarmScene();

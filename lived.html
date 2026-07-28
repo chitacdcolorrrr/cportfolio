@@ -6,14 +6,26 @@
     <title>under construction</title>
     <meta name="description" content="The lived page of tnyh0330 is under construction.">
     <link rel="icon" href="/images/favicon.jpg" type="image/jpeg">
-    <link rel="stylesheet" href="/css/placeholder.css?v=20260725-1">
+    <script>
+        document.documentElement.classList.add('js');
+        window.AH_LOADER_ASSETS = ['/images/home-background.webp'];
+        window.revealIntroFallback = () => {
+            window.clearTimeout(window.introFallbackTimer);
+            document.documentElement.classList.add('intro-ready', 'intro-skip');
+        };
+        window.introFallbackTimer = window.setTimeout(window.revealIntroFallback, 8000);
+    </script>
+    <link rel="stylesheet" href="/css/loader.css?v=20260729-1">
+    <link rel="stylesheet" href="/css/placeholder.css?v=20260729-2">
+    <script src="/js/vendor/lenis.min.js?v=20260729-1" defer></script>
+    <script src="/js/smooth.js?v=20260729-1" defer></script>
+    <script src="/js/loader.js?v=20260729-2" defer onerror="window.revealIntroFallback()"></script>
 </head>
 <body class="construction-page page-lived">
 <div class="page-backdrop" aria-hidden="true"></div>
 
 <header class="page-header">
     <a class="brand" href="/index.html">TNYH0330</a>
-    <p class="page-marker"><span>02 / 04</span> lived.</p>
 </header>
 
 <main class="construction-main">
@@ -30,7 +42,13 @@
 
 <footer class="page-footer">
     <a class="home-link" href="/"><span aria-hidden="true">←</span><span>back home</span></a>
-    <p>tnyh0330.com</p>
 </footer>
+
+<div class="site-loader" aria-hidden="true">
+    <div class="site-loader-meta">
+        <p class="site-loader-count">000 %</p>
+        <span class="site-loader-line" aria-hidden="true"><span class="site-loader-fill"></span></span>
+    </div>
+</div>
 </body>
 </html>

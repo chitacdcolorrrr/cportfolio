@@ -19,10 +19,11 @@
     --veil: 4, 10, 14;
     --page-inset: clamp(1.25rem, 3vw, 3rem);
     --scene-blur: clamp(2rem, 4vw, 3.5rem);
-    --reveal-blur-at: 0.6s;
-    --reveal-sections-at: 2.6s;
+    --reveal-blur-at: 0.5s;
+    --card-out-at: 1.2s;
+    --reveal-sections-at: 2.2s;
     --reveal-step: 0.12s;
-    --reveal-meta-at: 3.5s;
+    --reveal-meta-at: 3s;
     --reveal-ease: cubic-bezier(0.22, 0.7, 0.2, 1);
     --fog-ease: cubic-bezier(0.5, 0.05, 0.35, 1);
 }
@@ -74,10 +75,6 @@ body[data-scene='created'] {
 .js:not(.intro-ready) .home-main,
 .js:not(.intro-ready) .home-footer {
     visibility: hidden;
-}
-
-.js:not(.intro-ready) .home-brand {
-    visibility: visible;
 }
 
 .home-scene,
@@ -268,20 +265,35 @@ body::after {
     border-radius: 0.1rem;
 }
 
-.index-marker {
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    margin: 0;
-    color: rgba(244, 248, 250, 0.82);
-}
-
-.js.intro-ready .index-marker {
+.js.intro-ready .home-brand {
     animation: meta-reveal 0.85s var(--reveal-ease) var(--reveal-meta-at) backwards;
 }
 
-.index-marker span {
-    color: rgb(var(--accent));
+.home-title-card {
+    position: fixed;
+    bottom: var(--page-inset);
+    left: 50%;
+    z-index: 2;
+    margin: 0;
+    color: var(--paper);
+    font-size: clamp(0.69rem, 0.85vw, 0.78rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0.8rem rgba(2, 8, 12, 0.5);
+    transform: translateX(-50%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.js.intro-ready:not(.intro-skip) .home-title-card {
+    visibility: visible;
+    opacity: 1;
+    animation:
+        card-focus 0.6s var(--reveal-ease) backwards,
+        card-dissolve 0.75s ease-in var(--card-out-at) forwards;
 }
 
 .home-main {
@@ -433,19 +445,10 @@ body::after {
     animation: meta-reveal 0.85s var(--reveal-ease) var(--reveal-meta-at) backwards;
 }
 
-.home-domain {
-    margin: 0;
-}
-
-.js.intro-ready .home-domain {
-    animation: meta-reveal 0.85s var(--reveal-ease) var(--reveal-meta-at) backwards;
-}
-
 .js.intro-skip .home-scene::after,
-.js.intro-skip .index-marker,
+.js.intro-skip .home-brand,
 .js.intro-skip .index-link,
-.js.intro-skip .home-manifesto,
-.js.intro-skip .home-domain {
+.js.intro-skip .home-manifesto {
     animation: none;
 }
 
@@ -500,10 +503,6 @@ body::after {
     .home-manifesto {
         display: grid;
         gap: 0.2rem;
-    }
-
-    .home-domain {
-        display: none;
     }
 
     body[data-scene='loved'] .scene-warm {
@@ -577,6 +576,20 @@ body::after {
 @keyframes fog-fade {
     from {
         opacity: 0;
+    }
+}
+
+@keyframes card-focus {
+    from {
+        opacity: 0;
+        filter: blur(0.2rem);
+    }
+}
+
+@keyframes card-dissolve {
+    to {
+        opacity: 0;
+        filter: blur(0.9rem);
     }
 }
 

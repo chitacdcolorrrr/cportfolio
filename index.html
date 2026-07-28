@@ -9,6 +9,7 @@
     <link rel="icon" href="/images/favicon.jpg" type="image/jpeg">
     <script>
         document.documentElement.classList.add('js');
+        window.AH_LOADER_ASSETS = ['/images/home-background.webp?v=20260718-home-1'];
         window.revealIntroFallback = () => {
             window.clearTimeout(window.introFallbackTimer);
             document.documentElement.classList.add('intro-ready', 'intro-skip');
@@ -22,8 +23,10 @@
         type="image/webp"
         fetchpriority="high"
     >
-    <link rel="stylesheet" href="/css/styles.css?v=20260725-1">
-    <script src="/js/home.js?v=20260718-2" defer onerror="window.revealIntroFallback()"></script>
+    <link rel="stylesheet" href="/css/loader.css?v=20260729-1">
+    <link rel="stylesheet" href="/css/styles.css?v=20260729-4">
+    <script src="/js/home.js?v=20260729-1" defer onerror="window.revealIntroFallback()"></script>
+    <script src="/js/loader.js?v=20260729-2" defer onerror="window.revealIntroFallback()"></script>
 </head>
 <body class="home-page" data-scene="index">
 <div class="home-scene" aria-hidden="true">
@@ -33,7 +36,6 @@
 
 <header class="home-header">
     <a class="home-brand" href="/index.html" aria-label="TNYH0330 home">TNYH0330</a>
-    <p class="index-marker"><span>00 / 04</span> index.</p>
 </header>
 
 <main class="home-main">
@@ -74,12 +76,20 @@
     </nav>
 </main>
 
+<p class="home-title-card" aria-hidden="true">TNYH0330</p>
+
 <footer class="home-footer">
     <p class="home-manifesto">
         <span>Life vibrant full of vitality</span>
         <span lang="zh-CN">生命鲜活涌动</span>
     </p>
-    <p class="home-domain">tnyh0330.com</p>
 </footer>
+
+<div class="site-loader" aria-hidden="true">
+    <div class="site-loader-meta">
+        <p class="site-loader-count">000 %</p>
+        <span class="site-loader-line" aria-hidden="true"><span class="site-loader-fill"></span></span>
+    </div>
+</div>
 </body>
 </html>
