@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>帕鲁四词条配种方案生成器</title>
+<style>
+  :root {
+    --bg: #10151b;
+    --card: #1a222b;
+    --card2: #222c37;
+    --line: #2f3c4a;
+    --text: #e8e4da;
+    --dim: #9aa7b4;
+    --accent: #f2a541;
+    --accent2: #ffd479;
+    --danger: #ff7b7b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  header { padding: 28px 16px 6px; text-align: center; }
+  header h1 { font-size: 24px; margin: 0 0 4px; letter-spacing: 1px; }
+  header .sub { color: var(--dim); font-size: 13px; margin: 0; }
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 14px 16px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card h2 { font-size: 16px; margin: 0 0 12px; color: var(--accent2); font-weight: 600; }
+  .hint { color: var(--dim); font-size: 13px; margin: 8px 0 0; }
+  input[type="text"], input:not([type]) {
+    background: #121920;
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+    width: 100%;
+  }
+  input:focus { outline: none; border-color: var(--accent); }
+  input.invalid { border-color: var(--danger); }
+  #target { max-width: 440px; }
+  #passives {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .passive-sel.neg { color: var(--danger); border-color: var(--danger); }
+  .pas-dd { position: relative; }
+  .pas-panel {
+    position: absolute;
+    z-index: 30;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 260px;
+    overflow-y: auto;
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  .pas-opt {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 7px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+  .pas-opt:last-child { border-bottom: none; }
+  .pas-opt:hover { background: rgba(242, 165, 65, 0.12); }
+  .pas-opt[hidden] { display: none; }
+  .pas-name { font-size: 14px; }
+  .pas-desc { font-size: 12px; color: var(--dim); }
+  .pas-opt.neg .pas-name { color: var(--danger); }
+  .carrier-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    padding: 10px 0;
+    border-top: 1px dashed var(--line);
+  }
+  .carrier-row:first-child { border-top: none; padding-top: 0; }
+  .carrier-pal { flex: 1 1 220px; min-width: 180px; }
+  .carrier-bits { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .bit {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--dim);
+    white-space: nowrap;
+  }
+  .bit input { accent-color: var(--accent); margin: 0; }
+  .bit[hidden] { display: none; }
+  button {
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--card2);
+    color: var(--text);
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  button:hover { border-color: var(--accent); }
+  #add-carrier { margin-top: 12px; }
+  .del { color: var(--danger); padding: 6px 10px; }
+  #generate {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a1206;
+    font-weight: 700;
+    font-size: 15px;
+    padding: 10px 28px;
+  }
+  .err { color: var(--danger); font-size: 14px; margin: 10px 0 0; }
+  .err:empty { display: none; }
+  .notice { color: var(--accent2); font-size: 13px; margin: 10px 0 0; }
+  .res-title { font-size: 16px; margin: 18px 0 4px; color: var(--accent2); font-weight: 600; }
+  .sug-card, .plan-card {
+    background: var(--card2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 10px 0;
+  }
+  .sug-card h4, .plan-card h4 { margin: 0 0 6px; font-size: 14.5px; }
+  .sug-card p { margin: 4px 0; font-size: 14px; }
+  .plan-meta { color: var(--dim); font-size: 13px; margin: 0; }
+  .steps { list-style: none; margin: 8px 0 0; padding: 0; }
+  .steps li {
+    padding: 6px 10px;
+    border-left: 3px solid var(--accent);
+    margin: 6px 0;
+    font-size: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0 6px 6px 0;
+  }
+  .warn-line { color: var(--accent2); margin: 4px 0; font-size: 14px; }
+  footer {
+    text-align: center;
+    color: var(--dim);
+    font-size: 12px;
+    padding: 20px 16px 34px;
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>帕鲁四词条配种方案生成器</h1>
+  <p class="sub">选定目标帕鲁与目标词条，录入你的携带者，自动生成分步孵化方案</p>
+</header>
+<main>
+  <section class="card" id="sec-target">
+    <h2>1. 目标帕鲁</h2>
+    <input id="target" type="text" list="pal-list" placeholder="输入图鉴号或中文名搜索，如「139 阿努比斯」" autocomplete="off">
+    <p class="hint">全部 299 种帕鲁均可作为目标。</p>
+  </section>
+
+  <section class="card" id="sec-passives-card">
+    <h2>2. 目标词条（1~4 个）</h2>
+    <div id="passives">
+      <input class="passive-sel" type="text" placeholder="词条 1" autocomplete="off">
+      <input class="passive-sel" type="text" placeholder="词条 2" autocomplete="off">
+      <input class="passive-sel" type="text" placeholder="词条 3" autocomplete="off">
+      <input class="passive-sel" type="text" placeholder="词条 4" autocomplete="off">
+    </div>
+    <p class="hint">按词条等级从高到低排列；选项下方显示具体加成，红色为负面词条（一般不要选）。</p>
+  </section>
+
+  <section class="card" id="sec-carriers-card">
+    <h2>3. 我的携带者</h2>
+    <div id="carriers"></div>
+    <button id="add-carrier" type="button">+ 添加携带者</button>
+    <p class="hint">每只携带者勾选它身上带有的目标词条；未填的词条槽位会隐藏对应复选框。</p>
+  </section>
+
+  <section class="card" id="sec-generate">
+    <h2>4. 生成方案</h2>
+    <button id="generate" type="button">生成方案</button>
+    <p class="err" id="form-err"></p>
+    <div id="results"></div>
+  </section>
+</main>
+
+<footer>数据：Palworld 1.0 拆包（palcalc v27）；蛋数为偏乐观估算值（未计杂词条/变异占位）</footer>
+
+<datalist id="pal-list"></datalist>
+
+<!-- 加载顺序固定：data → engine → solver → suggest → ui -->
+<script>
+/* src/data.js */
+/* 生成文件, 请勿手改 — 由 tools/extract_data.py 从 palcalc @ d32c412 拆包数据生成 */
+(function(g){const DATA={"PALS":[{"id":"BadCatgirl","zh":"妮瞅莎","en":"Nyafia","dex":"143","rank":1250,"pri":125000,"isVariant":false,"minLv":30,"maxLv":60},{"id":"BlueberryFairy","zh":"梅莉姆","en":"Prunelia","dex":"147","rank":1390,"pri":139000,"isVariant":false,"minLv":30,"maxLv":66},{"id":"BrownRabbit","zh":"詹兔曼","en":"Lapiron","dex":"165","rank":1680,"pri":168000,"isVariant":false,"minLv":63,"maxLv":69},{"id":"GoldenHorse","zh":"金驰兽","en":"Gildane","dex":"154","rank":730,"pri":73000,"isVariant":false,"minLv":53,"maxLv":66},{"id":"TentacleTurtle","zh":"盔盔仔","en":"Turtacle","dex":"37","rank":2410,"pri":241000,"isVariant":false,"minLv":5,"maxLv":50},{"id":"TentacleTurtle_Ground","zh":"金盔仔","en":"Turtacle Terra","dex":"37B","rank":1330,"pri":577,"isVariant":true,"minLv":40,"maxLv":65},{"id":"Anubis","zh":"阿努比斯","en":"Anubis","dex":"139","rank":480,"pri":48000,"isVariant":false,"minLv":55,"maxLv":80},{"id":"Baphomet","zh":"炎魔羊","en":"Incineram","dex":"91","rank":1470,"pri":147000,"isVariant":false,"minLv":30,"maxLv":44},{"id":"Baphomet_Dark","zh":"暗魔羊","en":"Incineram Noct","dex":"91B","rank":1310,"pri":131000,"isVariant":true,"minLv":37,"maxLv":39},{"id":"Bastet","zh":"喵丝特","en":"Mau","dex":"27","rank":3040,"pri":304000,"isVariant":false,"minLv":5,"maxLv":25},{"id":"Bastet_Ice","zh":"冰丝特","en":"Mau Cryst","dex":"27B","rank":2750,"pri":275000,"isVariant":true,"minLv":1,"maxLv":45},{"id":"Boar","zh":"草莽猪","en":"Rushoar","dex":"28","rank":2880,"pri":288000,"isVariant":false,"minLv":5,"maxLv":25},{"id":"Carbunclo","zh":"翠叶鼠","en":"Lifmunk","dex":"4","rank":3020,"pri":302000,"isVariant":false,"minLv":1,"maxLv":14},{"id":"ColorfulBird","zh":"炸蛋鸟","en":"Tocotoco","dex":"53","rank":2730,"pri":273000,"isVariant":false,"minLv":1,"maxLv":47},{"id":"Deer","zh":"紫霞鹿","en":"Eikthyrdeer","dex":"32","rank":2710,"pri":271000,"isVariant":false,"minLv":6,"maxLv":80},{"id":"Deer_Ground","zh":"祇岳鹿","en":"Eikthyrdeer Terra","dex":"32B","rank":2580,"pri":258000,"isVariant":true,"minLv":20,"maxLv":80},{"id":"DrillGame","zh":"碎岩龟","en":"Digtoise","dex":"107","rank":1550,"pri":155000,"isVariant":false,"minLv":17,"maxLv":44},{"id":"Eagle","zh":"天擒鸟","en":"Galeclaw","dex":"49","rank":2570,"pri":257000,"isVariant":false,"minLv":11,"maxLv":29},{"id":"ElecPanda","zh":"暴电熊","en":"Grizzbolt","dex":"185","rank":1020,"pri":102000,"isVariant":false,"minLv":30,"maxLv":80},{"id":"Ganesha","zh":"壶小象","en":"Teafant","dex":"11","rank":3070,"pri":307000,"isVariant":false,"minLv":2,"maxLv":25},{"id":"Garm","zh":"猎狼","en":"Direhowl","dex":"33","rank":2680,"pri":268000,"isVariant":false,"minLv":6,"maxLv":14},{"id":"Gorilla","zh":"铁拳猿","en":"Gorirat","dex":"74","rank":2140,"pri":214000,"isVariant":false,"minLv":22,"maxLv":80},{"id":"Gorilla_Ground","zh":"石掌猿","en":"Gorirat Terra","dex":"74B","rank":1880,"pri":188000,"isVariant":true,"minLv":30,"maxLv":80},{"id":"Hedgehog","zh":"电棘鼠","en":"Jolthog","dex":"15","rank":3030,"pri":303000,"isVariant":false,"minLv":4,"maxLv":13},{"id":"Hedgehog_Ice","zh":"冰刺鼠","en":"Jolthog Cryst","dex":"15B","rank":2850,"pri":285000,"isVariant":true,"minLv":1,"maxLv":24},{"id":"Kirin","zh":"雷角马","en":"Univolt","dex":"54","rank":2270,"pri":227000,"isVariant":false,"minLv":14,"maxLv":80},{"id":"Kirin_Ice","zh":"凌角马","en":"Univolt Cryst","dex":"54B","rank":540,"pri":54000,"isVariant":true,"minLv":75,"maxLv":77},{"id":"Kitsunebi","zh":"火绒狐","en":"Foxparks","dex":"29","rank":2990,"pri":299000,"isVariant":false,"minLv":5,"maxLv":18},{"id":"LittleBriarRose","zh":"荊棘魔仙","en":"Bristla","dex":"60","rank":2690,"pri":269000,"isVariant":false,"minLv":1,"maxLv":29},{"id":"Mutant","zh":"秘斯媞雅","en":"Lunaris","dex":"82","rank":2010,"pri":201000,"isVariant":false,"minLv":25,"maxLv":49},{"id":"Penguin","zh":"企丸丸","en":"Pengullet","dex":"17","rank":2960,"pri":296000,"isVariant":false,"minLv":1,"maxLv":45},{"id":"Penguin_Electric","zh":"闪丸丸","en":"Pengullet Lux","dex":"17B","rank":2490,"pri":572,"isVariant":true,"minLv":50,"maxLv":55},{"id":"RaijinDaughter","zh":"雷鸣童子","en":"Dazzi","dex":"92","rank":2400,"pri":240000,"isVariant":false,"minLv":1,"maxLv":55},{"id":"SharkKid","zh":"鲨小子","en":"Gobfin","dex":"55","rank":2550,"pri":255000,"isVariant":false,"minLv":14,"maxLv":34},{"id":"SharkKid_Fire","zh":"红小鲨","en":"Gobfin Ignis","dex":"55B","rank":2430,"pri":243000,"isVariant":true,"minLv":20,"maxLv":50},{"id":"SheepBall","zh":"棉悠悠","en":"Lamball","dex":"1","rank":3050,"pri":305000,"isVariant":false,"minLv":1,"maxLv":20},{"id":"Umihebi","zh":"覆海龙","en":"Jormuntide","dex":"121","rank":590,"pri":59000,"isVariant":false,"minLv":55,"maxLv":80},{"id":"Umihebi_Fire","zh":"腾炎龙","en":"Jormuntide Ignis","dex":"121B","rank":170,"pri":17000,"isVariant":true,"minLv":66,"maxLv":80},{"id":"Werewolf","zh":"月镰魔","en":"Loupmoon","dex":"56","rank":2110,"pri":211000,"isVariant":false,"minLv":14,"maxLv":38},{"id":"WindChimes","zh":"吊缚灵","en":"Hangyu","dex":"38","rank":2780,"pri":278000,"isVariant":false,"minLv":9,"maxLv":40},{"id":"WindChimes_Ice","zh":"冰缚灵","en":"Hangyu Cryst","dex":"38B","rank":2510,"pri":251000,"isVariant":true,"minLv":25,"maxLv":60},{"id":"Suzaku","zh":"朱雀","en":"Suzaku","dex":"122","rank":1200,"pri":120000,"isVariant":false,"minLv":40,"maxLv":80},{"id":"Suzaku_Water","zh":"清雀","en":"Suzaku Aqua","dex":"122B","rank":740,"pri":74000,"isVariant":true,"minLv":42,"maxLv":80},{"id":"FireKirin","zh":"火麒麟","en":"Pyrin","dex":"93","rank":1980,"pri":198000,"isVariant":false,"minLv":29,"maxLv":80},{"id":"FireKirin_Dark","zh":"邪麒麟","en":"Pyrin Noct","dex":"93B","rank":1870,"pri":187000,"isVariant":true,"minLv":32,"maxLv":80},{"id":"FairyDragon","zh":"精灵龙","en":"Elphidran","dex":"63","rank":2280,"pri":228000,"isVariant":false,"minLv":20,"maxLv":80},{"id":"FairyDragon_Water","zh":"水灵龙","en":"Elphidran Aqua","dex":"63B","rank":1640,"pri":164000,"isVariant":true,"minLv":33,"maxLv":80},{"id":"SweetsSheep","zh":"棉花糖","en":"Woolipop","dex":"39","rank":2820,"pri":282000,"isVariant":false,"minLv":9,"maxLv":19},{"id":"SweetsSheep_Ground","zh":"可可棉花糖","en":"Woolipop Terra","dex":"39B","rank":2030,"pri":203000,"isVariant":true,"minLv":55,"maxLv":60},{"id":"WhiteTiger","zh":"冰棘兽","en":"Cryolinx","dex":"132","rank":1040,"pri":104000,"isVariant":false,"minLv":42,"maxLv":49},{"id":"Alpaca","zh":"美露帕","en":"Melpaca","dex":"20","rank":2720,"pri":272000,"isVariant":false,"minLv":5,"maxLv":17},{"id":"Serpent","zh":"滑水蛇","en":"Surfent","dex":"75","rank":2440,"pri":244000,"isVariant":false,"minLv":12,"maxLv":35},{"id":"Serpent_Ground","zh":"流沙蛇","en":"Surfent Terra","dex":"75B","rank":1840,"pri":184000,"isVariant":true,"minLv":31,"maxLv":63},{"id":"DarkCrow","zh":"黑鸦隐士","en":"Cawgnito","dex":"57","rank":2370,"pri":237000,"isVariant":false,"minLv":14,"maxLv":57},{"id":"BlueDragon","zh":"碧海龙","en":"Azurobe","dex":"41","rank":1830,"pri":183000,"isVariant":false,"minLv":35,"maxLv":80},{"id":"BlueDragon_Ice","zh":"碧月龙","en":"Azurobe Cryst","dex":"41B","rank":1220,"pri":578,"isVariant":true,"minLv":50,"maxLv":80},{"id":"PinkCat","zh":"捣蛋猫","en":"Cattiva","dex":"2","rank":2760,"pri":276000,"isVariant":false,"minLv":1,"maxLv":20},{"id":"NegativeKoala","zh":"瞅什魔","en":"Depresso","dex":"16","rank":3000,"pri":300000,"isVariant":false,"minLv":4,"maxLv":35},{"id":"FengyunDeeper","zh":"云海鹿","en":"Fenglope","dex":"83","rank":1960,"pri":196000,"isVariant":false,"minLv":25,"maxLv":80},{"id":"VolcanicMonster","zh":"熔岩兽","en":"Reptyro","dex":"129","rank":1060,"pri":106000,"isVariant":false,"minLv":36,"maxLv":50},{"id":"VolcanicMonster_Ice","zh":"寒霜兽","en":"Reptyro Cryst","dex":"129B","rank":600,"pri":60000,"isVariant":true,"minLv":42,"maxLv":67},{"id":"GhostBeast","zh":"噬魂兽","en":"Maraith","dex":"117","rank":1710,"pri":171000,"isVariant":false,"minLv":38,"maxLv":60},{"id":"RobinHood","zh":"羽箭射手","en":"Robinquill","dex":"76","rank":2260,"pri":226000,"isVariant":false,"minLv":22,"maxLv":34},{"id":"RobinHood_Ground","zh":"山岳射手","en":"Robinquill Terra","dex":"76B","rank":2050,"pri":205000,"isVariant":true,"minLv":30,"maxLv":55},{"id":"LazyDragon","zh":"佩克龙","en":"Relaxaurus","dex":"94","rank":1090,"pri":109000,"isVariant":false,"minLv":30,"maxLv":80},{"id":"LazyDragon_Electric","zh":"派克龙","en":"Relaxaurus Lux","dex":"94B","rank":770,"pri":77000,"isVariant":true,"minLv":48,"maxLv":80},{"id":"AmaterasuWolf","zh":"苍焰狼","en":"Kitsun","dex":"111","rank":1670,"pri":167000,"isVariant":false,"minLv":34,"maxLv":38},{"id":"LizardMan","zh":"朋克蜥","en":"Leezpunk","dex":"73","rank":2670,"pri":267000,"isVariant":false,"minLv":21,"maxLv":40},{"id":"LizardMan_Fire","zh":"热血蜥","en":"Leezpunk Ignis","dex":"73B","rank":2640,"pri":264000,"isVariant":true,"minLv":28,"maxLv":40},{"id":"BluePlatypus","zh":"冲浪鸭","en":"Fuack","dex":"5","rank":2980,"pri":298000,"isVariant":false,"minLv":6,"maxLv":20},{"id":"BluePlatypus_Fire","zh":"热浪鸭","en":"Fuack Ignis","dex":"5B","rank":2300,"pri":575,"isVariant":true,"minLv":32,"maxLv":50},{"id":"BirdDragon","zh":"烽歌龙","en":"Vanwyrm","dex":"64","rank":1650,"pri":165000,"isVariant":false,"minLv":20,"maxLv":63},{"id":"BirdDragon_Ice","zh":"霜歌龙","en":"Vanwyrm Cryst","dex":"64B","rank":1430,"pri":143000,"isVariant":true,"minLv":23,"maxLv":67},{"id":"ChickenPal","zh":"皮皮鸡","en":"Chikipi","dex":"3","rank":3080,"pri":308000,"isVariant":false,"minLv":1,"maxLv":25},{"id":"FlowerDinosaur","zh":"花冠龙","en":"Dinossom","dex":"84","rank":2100,"pri":210000,"isVariant":false,"minLv":10,"maxLv":35},{"id":"FlowerDinosaur_Electric","zh":"雷冠龙","en":"Dinossom Lux","dex":"84B","rank":1890,"pri":189000,"isVariant":true,"minLv":15,"maxLv":47},{"id":"ElecCat","zh":"伏特喵","en":"Sparkit","dex":"42","rank":3010,"pri":301000,"isVariant":false,"minLv":1,"maxLv":12},{"id":"IceHorse","zh":"唤冬兽","en":"Frostallion","dex":"200","rank":150,"pri":15000,"isVariant":false,"minLv":60,"maxLv":60},{"id":"IceHorse_Dark","zh":"唤夜兽","en":"Frostallion Noct","dex":"200B","rank":110,"pri":11000,"isVariant":true,"minLv":65,"maxLv":65},{"id":"GrassMammoth","zh":"森猛犸","en":"Mammorest","dex":"87","rank":1340,"pri":134000,"isVariant":false,"minLv":26,"maxLv":80},{"id":"GrassMammoth_Ice","zh":"雪猛犸","en":"Mammorest Cryst","dex":"87B","rank":1070,"pri":107000,"isVariant":true,"minLv":36,"maxLv":80},{"id":"CatVampire","zh":"夜幕魔蝠","en":"Felbat","dex":"65","rank":1570,"pri":157000,"isVariant":false,"minLv":20,"maxLv":66},{"id":"SakuraSaurus","zh":"连理龙","en":"Broncherry","dex":"108","rank":1380,"pri":138000,"isVariant":false,"minLv":23,"maxLv":80},{"id":"SakuraSaurus_Water","zh":"海誓龙","en":"Broncherry Aqua","dex":"108B","rank":1080,"pri":108000,"isVariant":true,"minLv":30,"maxLv":80},{"id":"Horus","zh":"荷鲁斯","en":"Faleris","dex":"188","rank":500,"pri":50000,"isVariant":false,"minLv":76,"maxLv":80},{"id":"KingBahamut","zh":"焰煌","en":"Blazamut","dex":"137","rank":410,"pri":41000,"isVariant":false,"minLv":46,"maxLv":80},{"id":"KingBahamut_Dragon","zh":"殁殃","en":"Blazamut Ryu","dex":"137B","rank":100,"pri":10000,"isVariant":true,"minLv":null,"maxLv":null},{"id":"BerryGoat","zh":"灌木羊","en":"Caprity","dex":"34","rank":2610,"pri":261000,"isVariant":false,"minLv":6,"maxLv":30},{"id":"IceDeer","zh":"严冬鹿","en":"Reindrix","dex":"101","rank":1930,"pri":193000,"isVariant":false,"minLv":32,"maxLv":80},{"id":"BlackGriffon","zh":"异构格里芬","en":"Shadowbeak","dex":"189","rank":550,"pri":55000,"isVariant":false,"minLv":50,"maxLv":80},{"id":"WhiteMoth","zh":"绸笠蛾","en":"Sibelyx","dex":"116","rank":1810,"pri":181000,"isVariant":false,"minLv":25,"maxLv":45},{"id":"WhiteMoth_Neutral","zh":"绢笠蛾","en":"Sibelyx Primo","dex":"116B","rank":650,"pri":65000,"isVariant":true,"minLv":75,"maxLv":78},{"id":"CuteFox","zh":"玉藻狐","en":"Vixy","dex":"6","rank":3060,"pri":306000,"isVariant":false,"minLv":1,"maxLv":25},{"id":"FoxMage","zh":"焰巫狐","en":"Wixen","dex":"78","rank":2080,"pri":208000,"isVariant":false,"minLv":20,"maxLv":38},{"id":"FoxMage_Dark","zh":"幽巫狐","en":"Wixen Noct","dex":"78B","rank":1490,"pri":149000,"isVariant":true,"minLv":30,"maxLv":55},{"id":"PinkLizard","zh":"博爱蜥","en":"Lovander","dex":"69","rank":2090,"pri":209000,"isVariant":false,"minLv":30,"maxLv":42},{"id":"WizardOwl","zh":"啼卡尔","en":"Hoocrates","dex":"19","rank":2940,"pri":294000,"isVariant":false,"minLv":4,"maxLv":22},{"id":"Kelpie","zh":"水灵儿","en":"Kelpsea","dex":"43","rank":2810,"pri":281000,"isVariant":false,"minLv":9,"maxLv":20},{"id":"Kelpie_Fire","zh":"火灵儿","en":"Kelpsea Ignis","dex":"43B","rank":2470,"pri":247000,"isVariant":true,"minLv":20,"maxLv":38},{"id":"NegativeOctopus","zh":"勾魂鱿","en":"Killamari","dex":"30","rank":2770,"pri":277000,"isVariant":false,"minLv":5,"maxLv":62},{"id":"NegativeOctopus_Neutral","zh":"蚀魂鱿","en":"Killamari Primo","dex":"30B","rank":2540,"pri":571,"isVariant":true,"minLv":24,"maxLv":55},{"id":"CowPal","zh":"波霸牛","en":"Mozzarina","dex":"40","rank":2800,"pri":280000,"isVariant":false,"minLv":9,"maxLv":19},{"id":"Yeti","zh":"白绒雪怪","en":"Wumpo","dex":"134","rank":830,"pri":83000,"isVariant":false,"minLv":42,"maxLv":80},{"id":"Yeti_Grass","zh":"绿苔绒怪","en":"Wumpo Botan","dex":"134B","rank":610,"pri":61000,"isVariant":true,"minLv":38,"maxLv":80},{"id":"VioletFairy","zh":"薇莉塔","en":"Vaelet","dex":"66","rank":1480,"pri":148000,"isVariant":false,"minLv":20,"maxLv":57},{"id":"HawkBird","zh":"疾风隼","en":"Nitewing","dex":"51","rank":2560,"pri":256000,"isVariant":false,"minLv":12,"maxLv":40},{"id":"FlowerRabbit","zh":"波娜兔","en":"Flopie","dex":"77","rank":2660,"pri":266000,"isVariant":false,"minLv":1,"maxLv":35},{"id":"LilyQueen","zh":"百合女王","en":"Lyleen","dex":"186","rank":240,"pri":24000,"isVariant":false,"minLv":58,"maxLv":80},{"id":"LilyQueen_Dark","zh":"黑月女王","en":"Lyleen Noct","dex":"186B","rank":220,"pri":22000,"isVariant":true,"minLv":49,"maxLv":80},{"id":"QueenBee","zh":"女皇蜂","en":"Elizabee","dex":"68","rank":1790,"pri":179000,"isVariant":false,"minLv":34,"maxLv":39},{"id":"SoldierBee","zh":"骑士蜂","en":"Beegarde","dex":"67","rank":2350,"pri":235000,"isVariant":false,"minLv":20,"maxLv":34},{"id":"CatBat","zh":"猫蝠怪","en":"Tombat","dex":"52","rank":2340,"pri":234000,"isVariant":false,"minLv":10,"maxLv":45},{"id":"GrassPanda","zh":"叶胖达","en":"Mossanda","dex":"102","rank":2060,"pri":206000,"isVariant":false,"minLv":27,"maxLv":80},{"id":"GrassPanda_Electric","zh":"雷胖达","en":"Mossanda Lux","dex":"102B","rank":1440,"pri":144000,"isVariant":true,"minLv":15,"maxLv":80},{"id":"FlameBuffalo","zh":"炽焰牛","en":"Arsox","dex":"58","rank":2320,"pri":232000,"isVariant":false,"minLv":1,"maxLv":34},{"id":"ThunderDog","zh":"霹雳犬","en":"Rayhound","dex":"98","rank":1920,"pri":192000,"isVariant":false,"minLv":20,"maxLv":58},{"id":"ThunderDog_Ice","zh":"凛光犬","en":"Rayhound Cryst","dex":"98B","rank":1600,"pri":160000,"isVariant":true,"minLv":35,"maxLv":77},{"id":"CuteMole","zh":"遁地鼠","en":"Fuddler","dex":"31","rank":2790,"pri":279000,"isVariant":false,"minLv":1,"maxLv":40},{"id":"BlackMetalDragon","zh":"魔渊龙","en":"Astegon","dex":"158","rank":490,"pri":49000,"isVariant":false,"minLv":55,"maxLv":80},{"id":"GrassRabbitMan","zh":"踏春兔","en":"Verdash","dex":"152","rank":1160,"pri":116000,"isVariant":false,"minLv":35,"maxLv":53},{"id":"IceFox","zh":"吹雪狐","en":"Foxcicle","dex":"95","rank":1970,"pri":197000,"isVariant":false,"minLv":15,"maxLv":37},{"id":"JetDragon","zh":"空涡龙","en":"Jetragon","dex":"202","rank":70,"pri":7000,"isVariant":false,"minLv":60,"maxLv":70},{"id":"DreamDemon","zh":"寐魔","en":"Daedream","dex":"22","rank":2910,"pri":291000,"isVariant":false,"minLv":4,"maxLv":16},{"id":"Monkey","zh":"新叶猿","en":"Tanzee","dex":"23","rank":2900,"pri":290000,"isVariant":false,"minLv":4,"maxLv":20},{"id":"Monkey_Fire","zh":"秋叶猿","en":"Tanzee Ignis","dex":"23B","rank":2830,"pri":283000,"isVariant":true,"minLv":10,"maxLv":12},{"id":"Manticore","zh":"狱焰王","en":"Blazehowl","dex":"112","rank":1360,"pri":136000,"isVariant":false,"minLv":30,"maxLv":80},{"id":"Manticore_Dark","zh":"狱阎王","en":"Blazehowl Noct","dex":"112B","rank":1270,"pri":127000,"isVariant":true,"minLv":34,"maxLv":80},{"id":"KingAlpaca","zh":"君王美露帕","en":"Kingpaca","dex":"21","rank":2220,"pri":222000,"isVariant":false,"minLv":23,"maxLv":80},{"id":"KingAlpaca_Ice","zh":"冰帝美露帕","en":"Kingpaca Cryst","dex":"21B","rank":1530,"pri":153000,"isVariant":true,"minLv":46,"maxLv":46},{"id":"PlantSlime","zh":"叶泥泥","en":"Gumoss","dex":"12","rank":2950,"pri":295000,"isVariant":false,"minLv":2,"maxLv":13},{"id":"PlantSlime_Flower","zh":"叶泥泥","en":"Gumoss","dex":"12B","rank":2950,"pri":295000,"isVariant":true,"minLv":2,"maxLv":4},{"id":"MopBaby","zh":"毛掸儿","en":"Swee","dex":"35","rank":2840,"pri":284000,"isVariant":false,"minLv":1,"maxLv":34},{"id":"MopKing","zh":"毛老爹","en":"Sweepa","dex":"36","rank":2150,"pri":215000,"isVariant":false,"minLv":11,"maxLv":40},{"id":"CatMage","zh":"暗巫猫","en":"Katress","dex":"79","rank":2040,"pri":204000,"isVariant":false,"minLv":20,"maxLv":46},{"id":"CatMage_Fire","zh":"炽巫猫","en":"Katress Ignis","dex":"79B","rank":1800,"pri":180000,"isVariant":true,"minLv":30,"maxLv":52},{"id":"PinkRabbit","zh":"姬小兔","en":"Ribbuny","dex":"44","rank":2860,"pri":286000,"isVariant":false,"minLv":1,"maxLv":35},{"id":"ThunderBird","zh":"迅雷鸟","en":"Beakon","dex":"96","rank":1690,"pri":169000,"isVariant":false,"minLv":30,"maxLv":80},{"id":"ThunderBird_Ice","zh":"疾霜鸟","en":"Beakon Cryst","dex":"96B","rank":580,"pri":58000,"isVariant":true,"minLv":75,"maxLv":77},{"id":"HerculesBeetle","zh":"铠格力斯","en":"Warsect","dex":"113","rank":1280,"pri":128000,"isVariant":false,"minLv":34,"maxLv":80},{"id":"HerculesBeetle_Ground","zh":"格鲁力斯","en":"Warsect Terra","dex":"113B","rank":630,"pri":63000,"isVariant":true,"minLv":30,"maxLv":64},{"id":"SaintCentaur","zh":"圣光骑士","en":"Paladius","dex":"198","rank":180,"pri":18000,"isVariant":false,"minLv":60,"maxLv":60},{"id":"NightFox","zh":"露娜蒂","en":"Nox","dex":"24","rank":2920,"pri":292000,"isVariant":false,"minLv":1,"maxLv":25},{"id":"CaptainPenguin","zh":"企丸王","en":"Penking","dex":"18","rank":2070,"pri":207000,"isVariant":false,"minLv":15,"maxLv":44},{"id":"CaptainPenguin_Black","zh":"闪丸王","en":"Penking Lux","dex":"18B","rank":1850,"pri":573,"isVariant":true,"minLv":null,"maxLv":null},{"id":"WeaselDragon","zh":"疾旋鼬","en":"Chillet","dex":"103","rank":2330,"pri":233000,"isVariant":false,"minLv":11,"maxLv":80},{"id":"WeaselDragon_Fire","zh":"桃旋鼬","en":"Chillet Ignis","dex":"103B","rank":1950,"pri":195000,"isVariant":true,"minLv":30,"maxLv":80},{"id":"SkyDragon","zh":"天羽龙","en":"Quivern","dex":"124","rank":1210,"pri":121000,"isVariant":false,"minLv":40,"maxLv":80},{"id":"SkyDragon_Grass","zh":"翠羽龙","en":"Quivern Botan","dex":"124B","rank":1300,"pri":130000,"isVariant":true,"minLv":45,"maxLv":80},{"id":"HadesBird","zh":"雷冥鸟","en":"Helzephyr","dex":"80","rank":1130,"pri":113000,"isVariant":false,"minLv":24,"maxLv":80},{"id":"HadesBird_Electric","zh":"雷鸣鸟","en":"Helzephyr Lux","dex":"80B","rank":960,"pri":96000,"isVariant":true,"minLv":47,"maxLv":80},{"id":"RedArmorBird","zh":"燧火鸟","en":"Ragnahawk","dex":"104","rank":1050,"pri":105000,"isVariant":false,"minLv":32,"maxLv":80},{"id":"Ronin","zh":"浪刃武士","en":"Bushi","dex":"85","rank":1560,"pri":156000,"isVariant":false,"minLv":25,"maxLv":59},{"id":"Ronin_Dark","zh":"鬼刃武士","en":"Bushi Noct","dex":"85B","rank":840,"pri":84000,"isVariant":true,"minLv":46,"maxLv":67},{"id":"FlyingManta","zh":"鲁米儿","en":"Celaray","dex":"7","rank":2740,"pri":274000,"isVariant":false,"minLv":2,"maxLv":20},{"id":"FlyingManta_Thunder","zh":"雷米儿","en":"Celaray Lux","dex":"7B","rank":2380,"pri":574,"isVariant":true,"minLv":26,"maxLv":55},{"id":"BlackCentaur","zh":"混沌骑士","en":"Necromus","dex":"199","rank":190,"pri":19000,"isVariant":false,"minLv":60,"maxLv":60},{"id":"FlowerDoll","zh":"花丽娜","en":"Petallia","dex":"89","rank":1720,"pri":172000,"isVariant":false,"minLv":28,"maxLv":57},{"id":"FlowerDoll_Fire","zh":"樱丽娜","en":"Petallia Ignis","dex":"89B","rank":820,"pri":82000,"isVariant":true,"minLv":71,"maxLv":73},{"id":"NaughtyCat","zh":"笑魇猫","en":"Grintale","dex":"70","rank":2120,"pri":212000,"isVariant":false,"minLv":17,"maxLv":48},{"id":"CuteButterfly","zh":"幻悦蝶","en":"Cinnamoth","dex":"61","rank":2620,"pri":262000,"isVariant":false,"minLv":16,"maxLv":29},{"id":"DarkScorpion","zh":"冥铠蝎","en":"Menasting","dex":"99","rank":1120,"pri":112000,"isVariant":false,"minLv":31,"maxLv":44},{"id":"DarkScorpion_Ground","zh":"金铠蝎","en":"Menasting Terra","dex":"99B","rank":640,"pri":64000,"isVariant":true,"minLv":48,"maxLv":55},{"id":"ThunderDragonMan","zh":"波鲁杰克斯","en":"Orserk","dex":"187","rank":120,"pri":12000,"isVariant":false,"minLv":74,"maxLv":80},{"id":"WoolFox","zh":"米露菲","en":"Cremis","dex":"8","rank":2890,"pri":289000,"isVariant":false,"minLv":1,"maxLv":13},{"id":"LazyCatfish","zh":"趴趴鲶","en":"Dumud","dex":"109","rank":2290,"pri":229000,"isVariant":false,"minLv":1,"maxLv":50},{"id":"LazyCatfish_Gold","zh":"梆梆鲶","en":"Dumud Gild","dex":"109B","rank":1620,"pri":576,"isVariant":true,"minLv":25,"maxLv":65},{"id":"LavaGirl","zh":"融焰娘","en":"Flambelle","dex":"25","rank":2700,"pri":270000,"isVariant":false,"minLv":1,"maxLv":50},{"id":"FlameBambi","zh":"燎火鹿","en":"Rooby","dex":"26","rank":2870,"pri":287000,"isVariant":false,"minLv":4,"maxLv":30},{"id":"NightLady","zh":"贝菈诺娃","en":"Bellanoir","dex":"195","rank":620,"pri":62000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"NightLady_Dark","zh":"贝菈露洁","en":"Bellanoir Libero","dex":"195B","rank":130,"pri":13000,"isVariant":true,"minLv":null,"maxLv":null},{"id":"MoonQueen","zh":"辉月伊","en":"Selyne","dex":"190","rank":360,"pri":36000,"isVariant":false,"minLv":76,"maxLv":80},{"id":"KendoFrog","zh":"武道蛙","en":"Croajiro","dex":"9","rank":2600,"pri":260000,"isVariant":false,"minLv":4,"maxLv":65},{"id":"KendoFrog_Dark","zh":"极道蛙","en":"Croajiro Noct","dex":"9B","rank":1860,"pri":186000,"isVariant":true,"minLv":61,"maxLv":80},{"id":"LeafPrincess","zh":"春彩娘","en":"Lullu","dex":"125","rank":1990,"pri":199000,"isVariant":false,"minLv":30,"maxLv":65},{"id":"MushroomDragon","zh":"菇咚","en":"Shroomer","dex":"118","rank":1520,"pri":152000,"isVariant":false,"minLv":30,"maxLv":77},{"id":"MushroomDragon_Dark","zh":"菇波","en":"Shroomer Noct","dex":"118B","rank":1450,"pri":145000,"isVariant":true,"minLv":39,"maxLv":77},{"id":"SmallArmadillo","zh":"球犰","en":"Kikit","dex":"126","rank":2310,"pri":231000,"isVariant":false,"minLv":30,"maxLv":49},{"id":"CandleGhost","zh":"恐炬灵","en":"Sootseer","dex":"135","rank":980,"pri":98000,"isVariant":false,"minLv":45,"maxLv":67},{"id":"ScorpionMan","zh":"蛊刺妖","en":"Prixter","dex":"141","rank":1510,"pri":151000,"isVariant":false,"minLv":48,"maxLv":49},{"id":"ScorpionMan_Electric","zh":"电针妖","en":"Prixter Lux","dex":"141B","rank":850,"pri":85000,"isVariant":true,"minLv":65,"maxLv":70},{"id":"WingGolem","zh":"泰锋","en":"Knocklem","dex":"159","rank":260,"pri":26000,"isVariant":false,"minLv":55,"maxLv":80},{"id":"WingGolem_Fire","zh":"丹烽","en":"Knocklem Ignis","dex":"159B","rank":210,"pri":21000,"isVariant":true,"minLv":65,"maxLv":73},{"id":"GuardianDog","zh":"八云犬","en":"Yakumo","dex":"127","rank":2230,"pri":223000,"isVariant":false,"minLv":30,"maxLv":65},{"id":"SifuDog","zh":"汪宗师","en":"Dogen","dex":"155","rank":1460,"pri":146000,"isVariant":false,"minLv":51,"maxLv":56},{"id":"FeatherOstrich","zh":"战冠雀","en":"Dazemu","dex":"123","rank":2210,"pri":221000,"isVariant":false,"minLv":31,"maxLv":49},{"id":"MimicDog","zh":"旺财","en":"Mimog","dex":"144","rank":1740,"pri":174000,"isVariant":false,"minLv":5,"maxLv":80},{"id":"DarkAlien","zh":"杰诺贝达","en":"Xenovader","dex":"145","rank":1820,"pri":182000,"isVariant":false,"minLv":25,"maxLv":30},{"id":"WhiteAlienDragon","zh":"杰诺路达","en":"Xenogard","dex":"146","rank":990,"pri":99000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"VolcanoDragon","zh":"流焰龙","en":"Moldron","dex":"105","rank":750,"pri":75000,"isVariant":false,"minLv":32,"maxLv":80},{"id":"VolcanoDragon_Ice","zh":"川霜龙","en":"Moldron Cryst","dex":"105B","rank":380,"pri":38000,"isVariant":true,"minLv":78,"maxLv":78},{"id":"DarkMechaDragon","zh":"杰诺多兰","en":"Xenolord","dex":"196","rank":400,"pri":40000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"GhostRabbit","zh":"魅爱莉","en":"Nitemary","dex":"148","rank":1230,"pri":123000,"isVariant":false,"minLv":50,"maxLv":67},{"id":"GhostRabbit_Grass","zh":"碧艾莉","en":"Nitemary Botan","dex":"148B","rank":1320,"pri":132000,"isVariant":true,"minLv":50,"maxLv":54},{"id":"NightBlueHorse","zh":"夜冥驹","en":"Starryon","dex":"130","rank":1150,"pri":115000,"isVariant":false,"minLv":42,"maxLv":80},{"id":"NightBlueHorse_Neutral","zh":"日耀驹","en":"Starryon Primo","dex":"130B","rank":430,"pri":43000,"isVariant":true,"minLv":74,"maxLv":76},{"id":"WhiteShieldDragon","zh":"艾基鲁迦","en":"Silvegis","dex":"160","rank":560,"pri":56000,"isVariant":false,"minLv":59,"maxLv":80},{"id":"BlackPuppy","zh":"墨丸","en":"Smokie","dex":"149","rank":1760,"pri":176000,"isVariant":false,"minLv":30,"maxLv":66},{"id":"BlackPuppy_Ice","zh":"冬丸","en":"Smokie Cryst","dex":"149B","rank":1610,"pri":161000,"isVariant":true,"minLv":62,"maxLv":64},{"id":"WhiteDeer","zh":"净世鹿","en":"Celesdir","dex":"157","rank":570,"pri":57000,"isVariant":false,"minLv":54,"maxLv":80},{"id":"WhiteDeer_Dark","zh":"织夜鹿","en":"Celesdir Noct","dex":"157B","rank":270,"pri":27000,"isVariant":true,"minLv":79,"maxLv":79},{"id":"KingWhale","zh":"奥沧鲸","en":"Panthalus","dex":"203","rank":20,"pri":2000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"MysteryMask","zh":"面惧","en":"Omascul","dex":"150","rank":1140,"pri":114000,"isVariant":false,"minLv":50,"maxLv":66},{"id":"HoodGhost","zh":"兜兜灵","en":"Hoodle","dex":"166","rank":1770,"pri":177000,"isVariant":false,"minLv":65,"maxLv":69},{"id":"Sekhmet","zh":"塞赫麦特","en":"Sekhmet","dex":"140","rank":870,"pri":87000,"isVariant":false,"minLv":37,"maxLv":80},{"id":"ElecLizard","zh":"电懒懒","en":"Slowatt","dex":"167","rank":1750,"pri":175000,"isVariant":false,"minLv":65,"maxLv":66},{"id":"GrimGirl","zh":"幽恋娜","en":"Splatterina","dex":"153","rank":780,"pri":78000,"isVariant":false,"minLv":52,"maxLv":80},{"id":"PurpleSpider","zh":"桃蛛娘","en":"Tarantriss","dex":"71","rank":1730,"pri":173000,"isVariant":false,"minLv":20,"maxLv":58},{"id":"BlueThunderHorse","zh":"驭雷马","en":"Azurmane","dex":"161","rank":420,"pri":42000,"isVariant":false,"minLv":57,"maxLv":80},{"id":"RockBeast","zh":"磐峰兽","en":"Pierdon","dex":"131","rank":1110,"pri":111000,"isVariant":false,"minLv":42,"maxLv":50},{"id":"RockBeast_Ice","zh":"寒峰兽","en":"Pierdon Cryst","dex":"131B","rank":460,"pri":46000,"isVariant":true,"minLv":68,"maxLv":69},{"id":"OctopusGirl","zh":"墨沫姬","en":"Gloopie","dex":"48","rank":2530,"pri":253000,"isVariant":false,"minLv":10,"maxLv":80},{"id":"OctopusGirl_Neutral","zh":"梦沫姬","en":"Gloopie Primo","dex":"48B","rank":1630,"pri":163000,"isVariant":true,"minLv":65,"maxLv":66},{"id":"IceNarwhal","zh":"凉晶鲸","en":"Whalaska","dex":"151","rank":710,"pri":71000,"isVariant":false,"minLv":42,"maxLv":80},{"id":"IceNarwhal_Fire","zh":"桃晶鲸","en":"Whalaska Ignis","dex":"151B","rank":370,"pri":37000,"isVariant":true,"minLv":58,"maxLv":80},{"id":"JellyfishFairy","zh":"海月仙","en":"Jelliette","dex":"45","rank":2650,"pri":265000,"isVariant":false,"minLv":6,"maxLv":80},{"id":"Kitsunebi_Ice","zh":"雪绒狐","en":"Foxparks Cryst","dex":"29B","rank":2500,"pri":250000,"isVariant":true,"minLv":15,"maxLv":58},{"id":"BerryGoat_Dark","zh":"郁木羊","en":"Caprity Noct","dex":"34B","rank":1940,"pri":194000,"isVariant":true,"minLv":23,"maxLv":58},{"id":"PinkRabbit_Grass","zh":"艾小兔","en":"Ribbuny Botan","dex":"44B","rank":2460,"pri":246000,"isVariant":true,"minLv":18,"maxLv":58},{"id":"Werewolf_Ice","zh":"霜镰魔","en":"Loupmoon Cryst","dex":"56B","rank":1290,"pri":129000,"isVariant":true,"minLv":30,"maxLv":66},{"id":"AmaterasuWolf_Dark","zh":"幽焰狼","en":"Kitsun Noct","dex":"111B","rank":800,"pri":80000,"isVariant":true,"minLv":56,"maxLv":66},{"id":"RaijinDaughter_Water","zh":"天阴童子","en":"Dazzi Noct","dex":"92B","rank":1910,"pri":191000,"isVariant":true,"minLv":20,"maxLv":66},{"id":"WhiteTiger_Ground","zh":"金棘兽","en":"Cryolinx Terra","dex":"132B","rank":470,"pri":47000,"isVariant":true,"minLv":56,"maxLv":64},{"id":"FengyunDeeper_Electric","zh":"雷隐鹿","en":"Fenglope Lux","dex":"83B","rank":900,"pri":90000,"isVariant":true,"minLv":57,"maxLv":80},{"id":"Horus_Water","zh":"伊西斯","en":"Faleris Aqua","dex":"188B","rank":450,"pri":45000,"isVariant":true,"minLv":56,"maxLv":80},{"id":"SnowTigerBeastman","zh":"霜牙王","en":"Bastigor","dex":"191","rank":50,"pri":5000,"isVariant":false,"minLv":75,"maxLv":80},{"id":"SnakeGirl","zh":"梅杜娜","en":"Venusa","dex":"178","rank":970,"pri":97000,"isVariant":false,"minLv":75,"maxLv":77},{"id":"GhostAnglerfish","zh":"冥灯鱼","en":"Ghangler","dex":"97","rank":880,"pri":88000,"isVariant":false,"minLv":30,"maxLv":80},{"id":"GhostAnglerfish_Fire","zh":"炙灯鱼","en":"Ghangler Ignis","dex":"97B","rank":720,"pri":72000,"isVariant":true,"minLv":null,"maxLv":null},{"id":"IceWitch","zh":"冰姬灵","en":"Icelyn","dex":"119","rank":1260,"pri":126000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"ClownRabbit","zh":"拉比耶尔","en":"Dupin","dex":"176","rank":520,"pri":52000,"isVariant":false,"minLv":55,"maxLv":74},{"id":"LegendDeer","zh":"默世鹿","en":"Hartalis","dex":"197","rank":90,"pri":9000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"LeafMomonga","zh":"达鼠泥","en":"Herbil","dex":"10","rank":2630,"pri":263000,"isVariant":false,"minLv":1,"maxLv":50},{"id":"SmallYeti","zh":"雪墩墩","en":"Snugloo","dex":"133","rank":2390,"pri":239000,"isVariant":false,"minLv":32,"maxLv":34},{"id":"IceCrocodile","zh":"肚肚鳄","en":"Munchill","dex":"86","rank":2130,"pri":213000,"isVariant":false,"minLv":10,"maxLv":60},{"id":"CactusDoll","zh":"球抱苞","en":"Needoll","dex":"100","rank":2420,"pri":242000,"isVariant":false,"minLv":31,"maxLv":40},{"id":"CactusDoll_Dark","zh":"妖抱苞","en":"Needoll Noct","dex":"100B","rank":1580,"pri":158000,"isVariant":true,"minLv":33,"maxLv":36},{"id":"MushroomLady","zh":"红菇娘","en":"Mycora","dex":"179","rank":760,"pri":76000,"isVariant":false,"minLv":75,"maxLv":78},{"id":"StuffedShark","zh":"布偶鲨","en":"Finsider","dex":"88","rank":2450,"pri":245000,"isVariant":false,"minLv":1,"maxLv":40},{"id":"StuffedShark_Fire","zh":"粉粉布偶鲨","en":"Finsider Ignis","dex":"88B","rank":2240,"pri":581,"isVariant":true,"minLv":null,"maxLv":null},{"id":"FoxExorcist","zh":"昭炎狐","en":"Flaracle","dex":"174","rank":390,"pri":39000,"isVariant":false,"minLv":65,"maxLv":80},{"id":"IceSeal","zh":"香草豹冰","en":"Polapup","dex":"72","rank":1660,"pri":166000,"isVariant":false,"minLv":33,"maxLv":60},{"id":"IceSeal_Ground","zh":"巧克力豹冰","en":"Polapup Terra","dex":"72B","rank":1100,"pri":110000,"isVariant":true,"minLv":55,"maxLv":60},{"id":"CloverFairy","zh":"幸叶茸","en":"Clovee","dex":"14","rank":2970,"pri":297000,"isVariant":false,"minLv":3,"maxLv":13},{"id":"ElecPomeranian","zh":"电汪汪","en":"Puffolt","dex":"62","rank":2360,"pri":236000,"isVariant":false,"minLv":18,"maxLv":69},{"id":"GhostBlackCat","zh":"念影喵","en":"Wispaw","dex":"50","rank":2250,"pri":225000,"isVariant":false,"minLv":11,"maxLv":73},{"id":"ThiefBird","zh":"盗影鸦","en":"Roujay","dex":"177","rank":530,"pri":53000,"isVariant":false,"minLv":74,"maxLv":78},{"id":"OniGhostGirl","zh":"吓丝妮","en":"Bakemi","dex":"168","rank":1540,"pri":154000,"isVariant":false,"minLv":65,"maxLv":69},{"id":"Plesiosaur","zh":"梁叶龙","en":"Braloha","dex":"110","rank":1030,"pri":103000,"isVariant":false,"minLv":33,"maxLv":80},{"id":"TropicalOstrich","zh":"咕咕桑葩","en":"Palumba","dex":"106","rank":1240,"pri":124000,"isVariant":false,"minLv":32,"maxLv":50},{"id":"GrassGolem","zh":"双心岩傀","en":"Dualith","dex":"138","rank":510,"pri":51000,"isVariant":false,"minLv":46,"maxLv":80},{"id":"GrassGolem_Dark","zh":"咒心岩傀","en":"Dualith Noct","dex":"138B","rank":250,"pri":25000,"isVariant":true,"minLv":70,"maxLv":77},{"id":"SnowPeafowl","zh":"白真雪雀","en":"Frostplume","dex":"114","rank":860,"pri":86000,"isVariant":false,"minLv":39,"maxLv":68},{"id":"CubeTurtle","zh":"重岩龟","en":"Tetroise","dex":"142","rank":790,"pri":79000,"isVariant":false,"minLv":48,"maxLv":80},{"id":"CubeTurtle_Neutral","zh":"净岩龟","en":"Tetroise Primo","dex":"142B","rank":200,"pri":20000,"isVariant":true,"minLv":60,"maxLv":78},{"id":"LongCat","zh":"喵璐璐","en":"Valentail","dex":"162","rank":1900,"pri":190000,"isVariant":false,"minLv":63,"maxLv":69},{"id":"JellyfishGhost","zh":"海月灵","en":"Jellroy","dex":"46","rank":2590,"pri":259000,"isVariant":false,"minLv":14,"maxLv":80},{"id":"ThunderFluffyBird","zh":"雷云鹫","en":"Dynamoff","dex":"172","rank":1400,"pri":140000,"isVariant":false,"minLv":63,"maxLv":69},{"id":"MoonChild","zh":"缀夜星","en":"Wistella","dex":"181","rank":1180,"pri":118000,"isVariant":false,"minLv":66,"maxLv":78},{"id":"SamuraiDog","zh":"宗铭丸","en":"Pupperai","dex":"13","rank":2930,"pri":293000,"isVariant":false,"minLv":2,"maxLv":4},{"id":"PoseidonOrca","zh":"海皇鲸","en":"Neptilius","dex":"201","rank":160,"pri":16000,"isVariant":false,"minLv":60,"maxLv":60},{"id":"SwordCutlassfish","zh":"鞘刀鱼","en":"Skutlass","dex":"128","rank":1420,"pri":142000,"isVariant":false,"minLv":30,"maxLv":66},{"id":"SwordCutlassfish_Fire","zh":"炼刃鱼","en":"Skutlass Ignis","dex":"128B","rank":1590,"pri":159000,"isVariant":true,"minLv":40,"maxLv":44},{"id":"YakushimaMonster001","zh":"绿史莱姆","en":"Green Slime","dex":"10002","rank":3100,"pri":310000,"isVariant":false,"minLv":33,"maxLv":35},{"id":"YakushimaMonster001_Blue","zh":"蓝史莱姆","en":"Blue Slime","dex":"10003","rank":3100,"pri":310000,"isVariant":false,"minLv":33,"maxLv":35},{"id":"YakushimaMonster001_Red","zh":"红史莱姆","en":"Red Slime","dex":"10007","rank":3100,"pri":310000,"isVariant":false,"minLv":36,"maxLv":41},{"id":"YakushimaMonster001_Purple","zh":"紫史莱姆","en":"Purple Slime","dex":"10005","rank":3100,"pri":310000,"isVariant":false,"minLv":36,"maxLv":41},{"id":"YakushimaMonster001_Pink","zh":"夜明史莱姆","en":"Illuminant Slime","dex":"10004","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},{"id":"YakushimaMonster001_Rainbow","zh":"彩虹史莱姆","en":"Rainbow Slime","dex":"10006","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},{"id":"YakushimaMonster002","zh":"附魔剑","en":"Enchanted Sword","dex":"10008","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},{"id":"YakushimaMonster003","zh":"洞穴蝙蝠","en":"Cave Bat","dex":"10009","rank":3100,"pri":310000,"isVariant":false,"minLv":36,"maxLv":41},{"id":"YakushimaMonster003_Purple","zh":"夜明蝙蝠","en":"Illuminant Bat","dex":"10010","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},{"id":"YakushimaBoss001","zh":"克苏鲁之眼","en":"Eye of Cthulhu","dex":"10000","rank":3100,"pri":310000,"isVariant":false,"minLv":45,"maxLv":45},{"id":"YakushimaBoss001_Small","zh":"恶魔眼","en":"Demon Eye","dex":"10001","rank":3100,"pri":310000,"isVariant":false,"minLv":33,"maxLv":35},{"id":"MummyPal","zh":"缚乃伊","en":"Gildra","dex":"120","rank":1170,"pri":117000,"isVariant":false,"minLv":39,"maxLv":80},{"id":"KingSunfish","zh":"曼波王","en":"Solmora","dex":"169","rank":1370,"pri":137000,"isVariant":false,"minLv":66,"maxLv":67},{"id":"KingSunfish_Thunder","zh":"曼波皇","en":"Solmora Lux","dex":"169B","rank":1000,"pri":100000,"isVariant":true,"minLv":76,"maxLv":78},{"id":"MonochromeQueen","zh":"墨罗娜","en":"Solenne","dex":"182","rank":280,"pri":28000,"isVariant":false,"minLv":76,"maxLv":78},{"id":"ElecSnail","zh":"电涡蜗","en":"Snock","dex":"163","rank":1780,"pri":178000,"isVariant":false,"minLv":63,"maxLv":69},{"id":"ElecSnail_Ground","zh":"金涡蜗","en":"Snock Lux","dex":"163B","rank":1500,"pri":150000,"isVariant":true,"minLv":74,"maxLv":76},{"id":"LanternButler","zh":"妖焰灯","en":"Loomen","dex":"180","rank":890,"pri":89000,"isVariant":false,"minLv":75,"maxLv":77},{"id":"SumoDog","zh":"力士獒","en":"Bulldosu","dex":"156","rank":1190,"pri":119000,"isVariant":false,"minLv":53,"maxLv":56},{"id":"VenusFlytrap","zh":"颚莉丝","en":"Carnibora","dex":"136","rank":1700,"pri":170000,"isVariant":false,"minLv":45,"maxLv":48},{"id":"FluffyBird","zh":"雪绵啾","en":"Muffly","dex":"59","rank":2480,"pri":248000,"isVariant":false,"minLv":15,"maxLv":65},{"id":"DandelionGirl","zh":"蒲蒲飞芽","en":"Souffline","dex":"164","rank":2000,"pri":200000,"isVariant":false,"minLv":63,"maxLv":69},{"id":"ClioneTwins","zh":"莉欧·莉涅","en":"Amione","dex":"47","rank":2520,"pri":252000,"isVariant":false,"minLv":9,"maxLv":65},{"id":"DarkFlameFox","zh":"紫狐娇","en":"Majex","dex":"115","rank":1010,"pri":101000,"isVariant":false,"minLv":35,"maxLv":77},{"id":"RedFlowerBird","zh":"大红呱","en":"Tropicaw","dex":"173","rank":1350,"pri":135000,"isVariant":false,"minLv":63,"maxLv":69},{"id":"SleeveRabbit","zh":"兔绣袖","en":"Lapure","dex":"170","rank":810,"pri":81000,"isVariant":false,"minLv":65,"maxLv":69},{"id":"LotusDragon","zh":"沁莲龙","en":"Ophydia","dex":"175","rank":230,"pri":23000,"isVariant":false,"minLv":69,"maxLv":80},{"id":"BlueSkyDragon","zh":"霄龙","en":"Shaolong","dex":"192","rank":40,"pri":4000,"isVariant":false,"minLv":76,"maxLv":78},{"id":"PandaGirl","zh":"莉芳","en":"Leafan","dex":"90","rank":1410,"pri":141000,"isVariant":false,"minLv":28,"maxLv":69},{"id":"GrassMinotaur","zh":"密林陶洛斯","en":"Elgrove","dex":"81","rank":2020,"pri":202000,"isVariant":false,"minLv":24,"maxLv":80},{"id":"GrassMinotaur_Ice","zh":"冰峰陶洛斯","en":"Elgrove Cryst","dex":"81B","rank":440,"pri":44000,"isVariant":true,"minLv":75,"maxLv":77},{"id":"Mothman","zh":"暮尘蛾","en":"Silvance","dex":"193","rank":80,"pri":8000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"GhostDragon","zh":"灵曦龙","en":"Eidrolon","dex":"171","rank":300,"pri":30000,"isVariant":false,"minLv":65,"maxLv":80},{"id":"GhostDragon_Fire","zh":"狱熙龙","en":"Eidrolon Ignis","dex":"171B","rank":140,"pri":14000,"isVariant":true,"minLv":75,"maxLv":77},{"id":"FlowerPrince","zh":"夜蔓爵","en":"Dandilord","dex":"194","rank":60,"pri":6000,"isVariant":false,"minLv":null,"maxLv":null},{"id":"KabukiMan","zh":"燎火舞伶","en":"Renjishi","dex":"183","rank":290,"pri":29000,"isVariant":false,"minLv":78,"maxLv":80},{"id":"DomeArmorDragon","zh":"磐甲龙","en":"Aegidron","dex":"184","rank":30,"pri":3000,"isVariant":false,"minLv":79,"maxLv":79}],"PAL_BY_ID":{"BadCatgirl":{"id":"BadCatgirl","zh":"妮瞅莎","en":"Nyafia","dex":"143","rank":1250,"pri":125000,"isVariant":false,"minLv":30,"maxLv":60},"BlueberryFairy":{"id":"BlueberryFairy","zh":"梅莉姆","en":"Prunelia","dex":"147","rank":1390,"pri":139000,"isVariant":false,"minLv":30,"maxLv":66},"BrownRabbit":{"id":"BrownRabbit","zh":"詹兔曼","en":"Lapiron","dex":"165","rank":1680,"pri":168000,"isVariant":false,"minLv":63,"maxLv":69},"GoldenHorse":{"id":"GoldenHorse","zh":"金驰兽","en":"Gildane","dex":"154","rank":730,"pri":73000,"isVariant":false,"minLv":53,"maxLv":66},"TentacleTurtle":{"id":"TentacleTurtle","zh":"盔盔仔","en":"Turtacle","dex":"37","rank":2410,"pri":241000,"isVariant":false,"minLv":5,"maxLv":50},"TentacleTurtle_Ground":{"id":"TentacleTurtle_Ground","zh":"金盔仔","en":"Turtacle Terra","dex":"37B","rank":1330,"pri":577,"isVariant":true,"minLv":40,"maxLv":65},"Anubis":{"id":"Anubis","zh":"阿努比斯","en":"Anubis","dex":"139","rank":480,"pri":48000,"isVariant":false,"minLv":55,"maxLv":80},"Baphomet":{"id":"Baphomet","zh":"炎魔羊","en":"Incineram","dex":"91","rank":1470,"pri":147000,"isVariant":false,"minLv":30,"maxLv":44},"Baphomet_Dark":{"id":"Baphomet_Dark","zh":"暗魔羊","en":"Incineram Noct","dex":"91B","rank":1310,"pri":131000,"isVariant":true,"minLv":37,"maxLv":39},"Bastet":{"id":"Bastet","zh":"喵丝特","en":"Mau","dex":"27","rank":3040,"pri":304000,"isVariant":false,"minLv":5,"maxLv":25},"Bastet_Ice":{"id":"Bastet_Ice","zh":"冰丝特","en":"Mau Cryst","dex":"27B","rank":2750,"pri":275000,"isVariant":true,"minLv":1,"maxLv":45},"Boar":{"id":"Boar","zh":"草莽猪","en":"Rushoar","dex":"28","rank":2880,"pri":288000,"isVariant":false,"minLv":5,"maxLv":25},"Carbunclo":{"id":"Carbunclo","zh":"翠叶鼠","en":"Lifmunk","dex":"4","rank":3020,"pri":302000,"isVariant":false,"minLv":1,"maxLv":14},"ColorfulBird":{"id":"ColorfulBird","zh":"炸蛋鸟","en":"Tocotoco","dex":"53","rank":2730,"pri":273000,"isVariant":false,"minLv":1,"maxLv":47},"Deer":{"id":"Deer","zh":"紫霞鹿","en":"Eikthyrdeer","dex":"32","rank":2710,"pri":271000,"isVariant":false,"minLv":6,"maxLv":80},"Deer_Ground":{"id":"Deer_Ground","zh":"祇岳鹿","en":"Eikthyrdeer Terra","dex":"32B","rank":2580,"pri":258000,"isVariant":true,"minLv":20,"maxLv":80},"DrillGame":{"id":"DrillGame","zh":"碎岩龟","en":"Digtoise","dex":"107","rank":1550,"pri":155000,"isVariant":false,"minLv":17,"maxLv":44},"Eagle":{"id":"Eagle","zh":"天擒鸟","en":"Galeclaw","dex":"49","rank":2570,"pri":257000,"isVariant":false,"minLv":11,"maxLv":29},"ElecPanda":{"id":"ElecPanda","zh":"暴电熊","en":"Grizzbolt","dex":"185","rank":1020,"pri":102000,"isVariant":false,"minLv":30,"maxLv":80},"Ganesha":{"id":"Ganesha","zh":"壶小象","en":"Teafant","dex":"11","rank":3070,"pri":307000,"isVariant":false,"minLv":2,"maxLv":25},"Garm":{"id":"Garm","zh":"猎狼","en":"Direhowl","dex":"33","rank":2680,"pri":268000,"isVariant":false,"minLv":6,"maxLv":14},"Gorilla":{"id":"Gorilla","zh":"铁拳猿","en":"Gorirat","dex":"74","rank":2140,"pri":214000,"isVariant":false,"minLv":22,"maxLv":80},"Gorilla_Ground":{"id":"Gorilla_Ground","zh":"石掌猿","en":"Gorirat Terra","dex":"74B","rank":1880,"pri":188000,"isVariant":true,"minLv":30,"maxLv":80},"Hedgehog":{"id":"Hedgehog","zh":"电棘鼠","en":"Jolthog","dex":"15","rank":3030,"pri":303000,"isVariant":false,"minLv":4,"maxLv":13},"Hedgehog_Ice":{"id":"Hedgehog_Ice","zh":"冰刺鼠","en":"Jolthog Cryst","dex":"15B","rank":2850,"pri":285000,"isVariant":true,"minLv":1,"maxLv":24},"Kirin":{"id":"Kirin","zh":"雷角马","en":"Univolt","dex":"54","rank":2270,"pri":227000,"isVariant":false,"minLv":14,"maxLv":80},"Kirin_Ice":{"id":"Kirin_Ice","zh":"凌角马","en":"Univolt Cryst","dex":"54B","rank":540,"pri":54000,"isVariant":true,"minLv":75,"maxLv":77},"Kitsunebi":{"id":"Kitsunebi","zh":"火绒狐","en":"Foxparks","dex":"29","rank":2990,"pri":299000,"isVariant":false,"minLv":5,"maxLv":18},"LittleBriarRose":{"id":"LittleBriarRose","zh":"荊棘魔仙","en":"Bristla","dex":"60","rank":2690,"pri":269000,"isVariant":false,"minLv":1,"maxLv":29},"Mutant":{"id":"Mutant","zh":"秘斯媞雅","en":"Lunaris","dex":"82","rank":2010,"pri":201000,"isVariant":false,"minLv":25,"maxLv":49},"Penguin":{"id":"Penguin","zh":"企丸丸","en":"Pengullet","dex":"17","rank":2960,"pri":296000,"isVariant":false,"minLv":1,"maxLv":45},"Penguin_Electric":{"id":"Penguin_Electric","zh":"闪丸丸","en":"Pengullet Lux","dex":"17B","rank":2490,"pri":572,"isVariant":true,"minLv":50,"maxLv":55},"RaijinDaughter":{"id":"RaijinDaughter","zh":"雷鸣童子","en":"Dazzi","dex":"92","rank":2400,"pri":240000,"isVariant":false,"minLv":1,"maxLv":55},"SharkKid":{"id":"SharkKid","zh":"鲨小子","en":"Gobfin","dex":"55","rank":2550,"pri":255000,"isVariant":false,"minLv":14,"maxLv":34},"SharkKid_Fire":{"id":"SharkKid_Fire","zh":"红小鲨","en":"Gobfin Ignis","dex":"55B","rank":2430,"pri":243000,"isVariant":true,"minLv":20,"maxLv":50},"SheepBall":{"id":"SheepBall","zh":"棉悠悠","en":"Lamball","dex":"1","rank":3050,"pri":305000,"isVariant":false,"minLv":1,"maxLv":20},"Umihebi":{"id":"Umihebi","zh":"覆海龙","en":"Jormuntide","dex":"121","rank":590,"pri":59000,"isVariant":false,"minLv":55,"maxLv":80},"Umihebi_Fire":{"id":"Umihebi_Fire","zh":"腾炎龙","en":"Jormuntide Ignis","dex":"121B","rank":170,"pri":17000,"isVariant":true,"minLv":66,"maxLv":80},"Werewolf":{"id":"Werewolf","zh":"月镰魔","en":"Loupmoon","dex":"56","rank":2110,"pri":211000,"isVariant":false,"minLv":14,"maxLv":38},"WindChimes":{"id":"WindChimes","zh":"吊缚灵","en":"Hangyu","dex":"38","rank":2780,"pri":278000,"isVariant":false,"minLv":9,"maxLv":40},"WindChimes_Ice":{"id":"WindChimes_Ice","zh":"冰缚灵","en":"Hangyu Cryst","dex":"38B","rank":2510,"pri":251000,"isVariant":true,"minLv":25,"maxLv":60},"Suzaku":{"id":"Suzaku","zh":"朱雀","en":"Suzaku","dex":"122","rank":1200,"pri":120000,"isVariant":false,"minLv":40,"maxLv":80},"Suzaku_Water":{"id":"Suzaku_Water","zh":"清雀","en":"Suzaku Aqua","dex":"122B","rank":740,"pri":74000,"isVariant":true,"minLv":42,"maxLv":80},"FireKirin":{"id":"FireKirin","zh":"火麒麟","en":"Pyrin","dex":"93","rank":1980,"pri":198000,"isVariant":false,"minLv":29,"maxLv":80},"FireKirin_Dark":{"id":"FireKirin_Dark","zh":"邪麒麟","en":"Pyrin Noct","dex":"93B","rank":1870,"pri":187000,"isVariant":true,"minLv":32,"maxLv":80},"FairyDragon":{"id":"FairyDragon","zh":"精灵龙","en":"Elphidran","dex":"63","rank":2280,"pri":228000,"isVariant":false,"minLv":20,"maxLv":80},"FairyDragon_Water":{"id":"FairyDragon_Water","zh":"水灵龙","en":"Elphidran Aqua","dex":"63B","rank":1640,"pri":164000,"isVariant":true,"minLv":33,"maxLv":80},"SweetsSheep":{"id":"SweetsSheep","zh":"棉花糖","en":"Woolipop","dex":"39","rank":2820,"pri":282000,"isVariant":false,"minLv":9,"maxLv":19},"SweetsSheep_Ground":{"id":"SweetsSheep_Ground","zh":"可可棉花糖","en":"Woolipop Terra","dex":"39B","rank":2030,"pri":203000,"isVariant":true,"minLv":55,"maxLv":60},"WhiteTiger":{"id":"WhiteTiger","zh":"冰棘兽","en":"Cryolinx","dex":"132","rank":1040,"pri":104000,"isVariant":false,"minLv":42,"maxLv":49},"Alpaca":{"id":"Alpaca","zh":"美露帕","en":"Melpaca","dex":"20","rank":2720,"pri":272000,"isVariant":false,"minLv":5,"maxLv":17},"Serpent":{"id":"Serpent","zh":"滑水蛇","en":"Surfent","dex":"75","rank":2440,"pri":244000,"isVariant":false,"minLv":12,"maxLv":35},"Serpent_Ground":{"id":"Serpent_Ground","zh":"流沙蛇","en":"Surfent Terra","dex":"75B","rank":1840,"pri":184000,"isVariant":true,"minLv":31,"maxLv":63},"DarkCrow":{"id":"DarkCrow","zh":"黑鸦隐士","en":"Cawgnito","dex":"57","rank":2370,"pri":237000,"isVariant":false,"minLv":14,"maxLv":57},"BlueDragon":{"id":"BlueDragon","zh":"碧海龙","en":"Azurobe","dex":"41","rank":1830,"pri":183000,"isVariant":false,"minLv":35,"maxLv":80},"BlueDragon_Ice":{"id":"BlueDragon_Ice","zh":"碧月龙","en":"Azurobe Cryst","dex":"41B","rank":1220,"pri":578,"isVariant":true,"minLv":50,"maxLv":80},"PinkCat":{"id":"PinkCat","zh":"捣蛋猫","en":"Cattiva","dex":"2","rank":2760,"pri":276000,"isVariant":false,"minLv":1,"maxLv":20},"NegativeKoala":{"id":"NegativeKoala","zh":"瞅什魔","en":"Depresso","dex":"16","rank":3000,"pri":300000,"isVariant":false,"minLv":4,"maxLv":35},"FengyunDeeper":{"id":"FengyunDeeper","zh":"云海鹿","en":"Fenglope","dex":"83","rank":1960,"pri":196000,"isVariant":false,"minLv":25,"maxLv":80},"VolcanicMonster":{"id":"VolcanicMonster","zh":"熔岩兽","en":"Reptyro","dex":"129","rank":1060,"pri":106000,"isVariant":false,"minLv":36,"maxLv":50},"VolcanicMonster_Ice":{"id":"VolcanicMonster_Ice","zh":"寒霜兽","en":"Reptyro Cryst","dex":"129B","rank":600,"pri":60000,"isVariant":true,"minLv":42,"maxLv":67},"GhostBeast":{"id":"GhostBeast","zh":"噬魂兽","en":"Maraith","dex":"117","rank":1710,"pri":171000,"isVariant":false,"minLv":38,"maxLv":60},"RobinHood":{"id":"RobinHood","zh":"羽箭射手","en":"Robinquill","dex":"76","rank":2260,"pri":226000,"isVariant":false,"minLv":22,"maxLv":34},"RobinHood_Ground":{"id":"RobinHood_Ground","zh":"山岳射手","en":"Robinquill Terra","dex":"76B","rank":2050,"pri":205000,"isVariant":true,"minLv":30,"maxLv":55},"LazyDragon":{"id":"LazyDragon","zh":"佩克龙","en":"Relaxaurus","dex":"94","rank":1090,"pri":109000,"isVariant":false,"minLv":30,"maxLv":80},"LazyDragon_Electric":{"id":"LazyDragon_Electric","zh":"派克龙","en":"Relaxaurus Lux","dex":"94B","rank":770,"pri":77000,"isVariant":true,"minLv":48,"maxLv":80},"AmaterasuWolf":{"id":"AmaterasuWolf","zh":"苍焰狼","en":"Kitsun","dex":"111","rank":1670,"pri":167000,"isVariant":false,"minLv":34,"maxLv":38},"LizardMan":{"id":"LizardMan","zh":"朋克蜥","en":"Leezpunk","dex":"73","rank":2670,"pri":267000,"isVariant":false,"minLv":21,"maxLv":40},"LizardMan_Fire":{"id":"LizardMan_Fire","zh":"热血蜥","en":"Leezpunk Ignis","dex":"73B","rank":2640,"pri":264000,"isVariant":true,"minLv":28,"maxLv":40},"BluePlatypus":{"id":"BluePlatypus","zh":"冲浪鸭","en":"Fuack","dex":"5","rank":2980,"pri":298000,"isVariant":false,"minLv":6,"maxLv":20},"BluePlatypus_Fire":{"id":"BluePlatypus_Fire","zh":"热浪鸭","en":"Fuack Ignis","dex":"5B","rank":2300,"pri":575,"isVariant":true,"minLv":32,"maxLv":50},"BirdDragon":{"id":"BirdDragon","zh":"烽歌龙","en":"Vanwyrm","dex":"64","rank":1650,"pri":165000,"isVariant":false,"minLv":20,"maxLv":63},"BirdDragon_Ice":{"id":"BirdDragon_Ice","zh":"霜歌龙","en":"Vanwyrm Cryst","dex":"64B","rank":1430,"pri":143000,"isVariant":true,"minLv":23,"maxLv":67},"ChickenPal":{"id":"ChickenPal","zh":"皮皮鸡","en":"Chikipi","dex":"3","rank":3080,"pri":308000,"isVariant":false,"minLv":1,"maxLv":25},"FlowerDinosaur":{"id":"FlowerDinosaur","zh":"花冠龙","en":"Dinossom","dex":"84","rank":2100,"pri":210000,"isVariant":false,"minLv":10,"maxLv":35},"FlowerDinosaur_Electric":{"id":"FlowerDinosaur_Electric","zh":"雷冠龙","en":"Dinossom Lux","dex":"84B","rank":1890,"pri":189000,"isVariant":true,"minLv":15,"maxLv":47},"ElecCat":{"id":"ElecCat","zh":"伏特喵","en":"Sparkit","dex":"42","rank":3010,"pri":301000,"isVariant":false,"minLv":1,"maxLv":12},"IceHorse":{"id":"IceHorse","zh":"唤冬兽","en":"Frostallion","dex":"200","rank":150,"pri":15000,"isVariant":false,"minLv":60,"maxLv":60},"IceHorse_Dark":{"id":"IceHorse_Dark","zh":"唤夜兽","en":"Frostallion Noct","dex":"200B","rank":110,"pri":11000,"isVariant":true,"minLv":65,"maxLv":65},"GrassMammoth":{"id":"GrassMammoth","zh":"森猛犸","en":"Mammorest","dex":"87","rank":1340,"pri":134000,"isVariant":false,"minLv":26,"maxLv":80},"GrassMammoth_Ice":{"id":"GrassMammoth_Ice","zh":"雪猛犸","en":"Mammorest Cryst","dex":"87B","rank":1070,"pri":107000,"isVariant":true,"minLv":36,"maxLv":80},"CatVampire":{"id":"CatVampire","zh":"夜幕魔蝠","en":"Felbat","dex":"65","rank":1570,"pri":157000,"isVariant":false,"minLv":20,"maxLv":66},"SakuraSaurus":{"id":"SakuraSaurus","zh":"连理龙","en":"Broncherry","dex":"108","rank":1380,"pri":138000,"isVariant":false,"minLv":23,"maxLv":80},"SakuraSaurus_Water":{"id":"SakuraSaurus_Water","zh":"海誓龙","en":"Broncherry Aqua","dex":"108B","rank":1080,"pri":108000,"isVariant":true,"minLv":30,"maxLv":80},"Horus":{"id":"Horus","zh":"荷鲁斯","en":"Faleris","dex":"188","rank":500,"pri":50000,"isVariant":false,"minLv":76,"maxLv":80},"KingBahamut":{"id":"KingBahamut","zh":"焰煌","en":"Blazamut","dex":"137","rank":410,"pri":41000,"isVariant":false,"minLv":46,"maxLv":80},"KingBahamut_Dragon":{"id":"KingBahamut_Dragon","zh":"殁殃","en":"Blazamut Ryu","dex":"137B","rank":100,"pri":10000,"isVariant":true,"minLv":null,"maxLv":null},"BerryGoat":{"id":"BerryGoat","zh":"灌木羊","en":"Caprity","dex":"34","rank":2610,"pri":261000,"isVariant":false,"minLv":6,"maxLv":30},"IceDeer":{"id":"IceDeer","zh":"严冬鹿","en":"Reindrix","dex":"101","rank":1930,"pri":193000,"isVariant":false,"minLv":32,"maxLv":80},"BlackGriffon":{"id":"BlackGriffon","zh":"异构格里芬","en":"Shadowbeak","dex":"189","rank":550,"pri":55000,"isVariant":false,"minLv":50,"maxLv":80},"WhiteMoth":{"id":"WhiteMoth","zh":"绸笠蛾","en":"Sibelyx","dex":"116","rank":1810,"pri":181000,"isVariant":false,"minLv":25,"maxLv":45},"WhiteMoth_Neutral":{"id":"WhiteMoth_Neutral","zh":"绢笠蛾","en":"Sibelyx Primo","dex":"116B","rank":650,"pri":65000,"isVariant":true,"minLv":75,"maxLv":78},"CuteFox":{"id":"CuteFox","zh":"玉藻狐","en":"Vixy","dex":"6","rank":3060,"pri":306000,"isVariant":false,"minLv":1,"maxLv":25},"FoxMage":{"id":"FoxMage","zh":"焰巫狐","en":"Wixen","dex":"78","rank":2080,"pri":208000,"isVariant":false,"minLv":20,"maxLv":38},"FoxMage_Dark":{"id":"FoxMage_Dark","zh":"幽巫狐","en":"Wixen Noct","dex":"78B","rank":1490,"pri":149000,"isVariant":true,"minLv":30,"maxLv":55},"PinkLizard":{"id":"PinkLizard","zh":"博爱蜥","en":"Lovander","dex":"69","rank":2090,"pri":209000,"isVariant":false,"minLv":30,"maxLv":42},"WizardOwl":{"id":"WizardOwl","zh":"啼卡尔","en":"Hoocrates","dex":"19","rank":2940,"pri":294000,"isVariant":false,"minLv":4,"maxLv":22},"Kelpie":{"id":"Kelpie","zh":"水灵儿","en":"Kelpsea","dex":"43","rank":2810,"pri":281000,"isVariant":false,"minLv":9,"maxLv":20},"Kelpie_Fire":{"id":"Kelpie_Fire","zh":"火灵儿","en":"Kelpsea Ignis","dex":"43B","rank":2470,"pri":247000,"isVariant":true,"minLv":20,"maxLv":38},"NegativeOctopus":{"id":"NegativeOctopus","zh":"勾魂鱿","en":"Killamari","dex":"30","rank":2770,"pri":277000,"isVariant":false,"minLv":5,"maxLv":62},"NegativeOctopus_Neutral":{"id":"NegativeOctopus_Neutral","zh":"蚀魂鱿","en":"Killamari Primo","dex":"30B","rank":2540,"pri":571,"isVariant":true,"minLv":24,"maxLv":55},"CowPal":{"id":"CowPal","zh":"波霸牛","en":"Mozzarina","dex":"40","rank":2800,"pri":280000,"isVariant":false,"minLv":9,"maxLv":19},"Yeti":{"id":"Yeti","zh":"白绒雪怪","en":"Wumpo","dex":"134","rank":830,"pri":83000,"isVariant":false,"minLv":42,"maxLv":80},"Yeti_Grass":{"id":"Yeti_Grass","zh":"绿苔绒怪","en":"Wumpo Botan","dex":"134B","rank":610,"pri":61000,"isVariant":true,"minLv":38,"maxLv":80},"VioletFairy":{"id":"VioletFairy","zh":"薇莉塔","en":"Vaelet","dex":"66","rank":1480,"pri":148000,"isVariant":false,"minLv":20,"maxLv":57},"HawkBird":{"id":"HawkBird","zh":"疾风隼","en":"Nitewing","dex":"51","rank":2560,"pri":256000,"isVariant":false,"minLv":12,"maxLv":40},"FlowerRabbit":{"id":"FlowerRabbit","zh":"波娜兔","en":"Flopie","dex":"77","rank":2660,"pri":266000,"isVariant":false,"minLv":1,"maxLv":35},"LilyQueen":{"id":"LilyQueen","zh":"百合女王","en":"Lyleen","dex":"186","rank":240,"pri":24000,"isVariant":false,"minLv":58,"maxLv":80},"LilyQueen_Dark":{"id":"LilyQueen_Dark","zh":"黑月女王","en":"Lyleen Noct","dex":"186B","rank":220,"pri":22000,"isVariant":true,"minLv":49,"maxLv":80},"QueenBee":{"id":"QueenBee","zh":"女皇蜂","en":"Elizabee","dex":"68","rank":1790,"pri":179000,"isVariant":false,"minLv":34,"maxLv":39},"SoldierBee":{"id":"SoldierBee","zh":"骑士蜂","en":"Beegarde","dex":"67","rank":2350,"pri":235000,"isVariant":false,"minLv":20,"maxLv":34},"CatBat":{"id":"CatBat","zh":"猫蝠怪","en":"Tombat","dex":"52","rank":2340,"pri":234000,"isVariant":false,"minLv":10,"maxLv":45},"GrassPanda":{"id":"GrassPanda","zh":"叶胖达","en":"Mossanda","dex":"102","rank":2060,"pri":206000,"isVariant":false,"minLv":27,"maxLv":80},"GrassPanda_Electric":{"id":"GrassPanda_Electric","zh":"雷胖达","en":"Mossanda Lux","dex":"102B","rank":1440,"pri":144000,"isVariant":true,"minLv":15,"maxLv":80},"FlameBuffalo":{"id":"FlameBuffalo","zh":"炽焰牛","en":"Arsox","dex":"58","rank":2320,"pri":232000,"isVariant":false,"minLv":1,"maxLv":34},"ThunderDog":{"id":"ThunderDog","zh":"霹雳犬","en":"Rayhound","dex":"98","rank":1920,"pri":192000,"isVariant":false,"minLv":20,"maxLv":58},"ThunderDog_Ice":{"id":"ThunderDog_Ice","zh":"凛光犬","en":"Rayhound Cryst","dex":"98B","rank":1600,"pri":160000,"isVariant":true,"minLv":35,"maxLv":77},"CuteMole":{"id":"CuteMole","zh":"遁地鼠","en":"Fuddler","dex":"31","rank":2790,"pri":279000,"isVariant":false,"minLv":1,"maxLv":40},"BlackMetalDragon":{"id":"BlackMetalDragon","zh":"魔渊龙","en":"Astegon","dex":"158","rank":490,"pri":49000,"isVariant":false,"minLv":55,"maxLv":80},"GrassRabbitMan":{"id":"GrassRabbitMan","zh":"踏春兔","en":"Verdash","dex":"152","rank":1160,"pri":116000,"isVariant":false,"minLv":35,"maxLv":53},"IceFox":{"id":"IceFox","zh":"吹雪狐","en":"Foxcicle","dex":"95","rank":1970,"pri":197000,"isVariant":false,"minLv":15,"maxLv":37},"JetDragon":{"id":"JetDragon","zh":"空涡龙","en":"Jetragon","dex":"202","rank":70,"pri":7000,"isVariant":false,"minLv":60,"maxLv":70},"DreamDemon":{"id":"DreamDemon","zh":"寐魔","en":"Daedream","dex":"22","rank":2910,"pri":291000,"isVariant":false,"minLv":4,"maxLv":16},"Monkey":{"id":"Monkey","zh":"新叶猿","en":"Tanzee","dex":"23","rank":2900,"pri":290000,"isVariant":false,"minLv":4,"maxLv":20},"Monkey_Fire":{"id":"Monkey_Fire","zh":"秋叶猿","en":"Tanzee Ignis","dex":"23B","rank":2830,"pri":283000,"isVariant":true,"minLv":10,"maxLv":12},"Manticore":{"id":"Manticore","zh":"狱焰王","en":"Blazehowl","dex":"112","rank":1360,"pri":136000,"isVariant":false,"minLv":30,"maxLv":80},"Manticore_Dark":{"id":"Manticore_Dark","zh":"狱阎王","en":"Blazehowl Noct","dex":"112B","rank":1270,"pri":127000,"isVariant":true,"minLv":34,"maxLv":80},"KingAlpaca":{"id":"KingAlpaca","zh":"君王美露帕","en":"Kingpaca","dex":"21","rank":2220,"pri":222000,"isVariant":false,"minLv":23,"maxLv":80},"KingAlpaca_Ice":{"id":"KingAlpaca_Ice","zh":"冰帝美露帕","en":"Kingpaca Cryst","dex":"21B","rank":1530,"pri":153000,"isVariant":true,"minLv":46,"maxLv":46},"PlantSlime":{"id":"PlantSlime","zh":"叶泥泥","en":"Gumoss","dex":"12","rank":2950,"pri":295000,"isVariant":false,"minLv":2,"maxLv":13},"PlantSlime_Flower":{"id":"PlantSlime_Flower","zh":"叶泥泥","en":"Gumoss","dex":"12B","rank":2950,"pri":295000,"isVariant":true,"minLv":2,"maxLv":4},"MopBaby":{"id":"MopBaby","zh":"毛掸儿","en":"Swee","dex":"35","rank":2840,"pri":284000,"isVariant":false,"minLv":1,"maxLv":34},"MopKing":{"id":"MopKing","zh":"毛老爹","en":"Sweepa","dex":"36","rank":2150,"pri":215000,"isVariant":false,"minLv":11,"maxLv":40},"CatMage":{"id":"CatMage","zh":"暗巫猫","en":"Katress","dex":"79","rank":2040,"pri":204000,"isVariant":false,"minLv":20,"maxLv":46},"CatMage_Fire":{"id":"CatMage_Fire","zh":"炽巫猫","en":"Katress Ignis","dex":"79B","rank":1800,"pri":180000,"isVariant":true,"minLv":30,"maxLv":52},"PinkRabbit":{"id":"PinkRabbit","zh":"姬小兔","en":"Ribbuny","dex":"44","rank":2860,"pri":286000,"isVariant":false,"minLv":1,"maxLv":35},"ThunderBird":{"id":"ThunderBird","zh":"迅雷鸟","en":"Beakon","dex":"96","rank":1690,"pri":169000,"isVariant":false,"minLv":30,"maxLv":80},"ThunderBird_Ice":{"id":"ThunderBird_Ice","zh":"疾霜鸟","en":"Beakon Cryst","dex":"96B","rank":580,"pri":58000,"isVariant":true,"minLv":75,"maxLv":77},"HerculesBeetle":{"id":"HerculesBeetle","zh":"铠格力斯","en":"Warsect","dex":"113","rank":1280,"pri":128000,"isVariant":false,"minLv":34,"maxLv":80},"HerculesBeetle_Ground":{"id":"HerculesBeetle_Ground","zh":"格鲁力斯","en":"Warsect Terra","dex":"113B","rank":630,"pri":63000,"isVariant":true,"minLv":30,"maxLv":64},"SaintCentaur":{"id":"SaintCentaur","zh":"圣光骑士","en":"Paladius","dex":"198","rank":180,"pri":18000,"isVariant":false,"minLv":60,"maxLv":60},"NightFox":{"id":"NightFox","zh":"露娜蒂","en":"Nox","dex":"24","rank":2920,"pri":292000,"isVariant":false,"minLv":1,"maxLv":25},"CaptainPenguin":{"id":"CaptainPenguin","zh":"企丸王","en":"Penking","dex":"18","rank":2070,"pri":207000,"isVariant":false,"minLv":15,"maxLv":44},"CaptainPenguin_Black":{"id":"CaptainPenguin_Black","zh":"闪丸王","en":"Penking Lux","dex":"18B","rank":1850,"pri":573,"isVariant":true,"minLv":null,"maxLv":null},"WeaselDragon":{"id":"WeaselDragon","zh":"疾旋鼬","en":"Chillet","dex":"103","rank":2330,"pri":233000,"isVariant":false,"minLv":11,"maxLv":80},"WeaselDragon_Fire":{"id":"WeaselDragon_Fire","zh":"桃旋鼬","en":"Chillet Ignis","dex":"103B","rank":1950,"pri":195000,"isVariant":true,"minLv":30,"maxLv":80},"SkyDragon":{"id":"SkyDragon","zh":"天羽龙","en":"Quivern","dex":"124","rank":1210,"pri":121000,"isVariant":false,"minLv":40,"maxLv":80},"SkyDragon_Grass":{"id":"SkyDragon_Grass","zh":"翠羽龙","en":"Quivern Botan","dex":"124B","rank":1300,"pri":130000,"isVariant":true,"minLv":45,"maxLv":80},"HadesBird":{"id":"HadesBird","zh":"雷冥鸟","en":"Helzephyr","dex":"80","rank":1130,"pri":113000,"isVariant":false,"minLv":24,"maxLv":80},"HadesBird_Electric":{"id":"HadesBird_Electric","zh":"雷鸣鸟","en":"Helzephyr Lux","dex":"80B","rank":960,"pri":96000,"isVariant":true,"minLv":47,"maxLv":80},"RedArmorBird":{"id":"RedArmorBird","zh":"燧火鸟","en":"Ragnahawk","dex":"104","rank":1050,"pri":105000,"isVariant":false,"minLv":32,"maxLv":80},"Ronin":{"id":"Ronin","zh":"浪刃武士","en":"Bushi","dex":"85","rank":1560,"pri":156000,"isVariant":false,"minLv":25,"maxLv":59},"Ronin_Dark":{"id":"Ronin_Dark","zh":"鬼刃武士","en":"Bushi Noct","dex":"85B","rank":840,"pri":84000,"isVariant":true,"minLv":46,"maxLv":67},"FlyingManta":{"id":"FlyingManta","zh":"鲁米儿","en":"Celaray","dex":"7","rank":2740,"pri":274000,"isVariant":false,"minLv":2,"maxLv":20},"FlyingManta_Thunder":{"id":"FlyingManta_Thunder","zh":"雷米儿","en":"Celaray Lux","dex":"7B","rank":2380,"pri":574,"isVariant":true,"minLv":26,"maxLv":55},"BlackCentaur":{"id":"BlackCentaur","zh":"混沌骑士","en":"Necromus","dex":"199","rank":190,"pri":19000,"isVariant":false,"minLv":60,"maxLv":60},"FlowerDoll":{"id":"FlowerDoll","zh":"花丽娜","en":"Petallia","dex":"89","rank":1720,"pri":172000,"isVariant":false,"minLv":28,"maxLv":57},"FlowerDoll_Fire":{"id":"FlowerDoll_Fire","zh":"樱丽娜","en":"Petallia Ignis","dex":"89B","rank":820,"pri":82000,"isVariant":true,"minLv":71,"maxLv":73},"NaughtyCat":{"id":"NaughtyCat","zh":"笑魇猫","en":"Grintale","dex":"70","rank":2120,"pri":212000,"isVariant":false,"minLv":17,"maxLv":48},"CuteButterfly":{"id":"CuteButterfly","zh":"幻悦蝶","en":"Cinnamoth","dex":"61","rank":2620,"pri":262000,"isVariant":false,"minLv":16,"maxLv":29},"DarkScorpion":{"id":"DarkScorpion","zh":"冥铠蝎","en":"Menasting","dex":"99","rank":1120,"pri":112000,"isVariant":false,"minLv":31,"maxLv":44},"DarkScorpion_Ground":{"id":"DarkScorpion_Ground","zh":"金铠蝎","en":"Menasting Terra","dex":"99B","rank":640,"pri":64000,"isVariant":true,"minLv":48,"maxLv":55},"ThunderDragonMan":{"id":"ThunderDragonMan","zh":"波鲁杰克斯","en":"Orserk","dex":"187","rank":120,"pri":12000,"isVariant":false,"minLv":74,"maxLv":80},"WoolFox":{"id":"WoolFox","zh":"米露菲","en":"Cremis","dex":"8","rank":2890,"pri":289000,"isVariant":false,"minLv":1,"maxLv":13},"LazyCatfish":{"id":"LazyCatfish","zh":"趴趴鲶","en":"Dumud","dex":"109","rank":2290,"pri":229000,"isVariant":false,"minLv":1,"maxLv":50},"LazyCatfish_Gold":{"id":"LazyCatfish_Gold","zh":"梆梆鲶","en":"Dumud Gild","dex":"109B","rank":1620,"pri":576,"isVariant":true,"minLv":25,"maxLv":65},"LavaGirl":{"id":"LavaGirl","zh":"融焰娘","en":"Flambelle","dex":"25","rank":2700,"pri":270000,"isVariant":false,"minLv":1,"maxLv":50},"FlameBambi":{"id":"FlameBambi","zh":"燎火鹿","en":"Rooby","dex":"26","rank":2870,"pri":287000,"isVariant":false,"minLv":4,"maxLv":30},"NightLady":{"id":"NightLady","zh":"贝菈诺娃","en":"Bellanoir","dex":"195","rank":620,"pri":62000,"isVariant":false,"minLv":null,"maxLv":null},"NightLady_Dark":{"id":"NightLady_Dark","zh":"贝菈露洁","en":"Bellanoir Libero","dex":"195B","rank":130,"pri":13000,"isVariant":true,"minLv":null,"maxLv":null},"MoonQueen":{"id":"MoonQueen","zh":"辉月伊","en":"Selyne","dex":"190","rank":360,"pri":36000,"isVariant":false,"minLv":76,"maxLv":80},"KendoFrog":{"id":"KendoFrog","zh":"武道蛙","en":"Croajiro","dex":"9","rank":2600,"pri":260000,"isVariant":false,"minLv":4,"maxLv":65},"KendoFrog_Dark":{"id":"KendoFrog_Dark","zh":"极道蛙","en":"Croajiro Noct","dex":"9B","rank":1860,"pri":186000,"isVariant":true,"minLv":61,"maxLv":80},"LeafPrincess":{"id":"LeafPrincess","zh":"春彩娘","en":"Lullu","dex":"125","rank":1990,"pri":199000,"isVariant":false,"minLv":30,"maxLv":65},"MushroomDragon":{"id":"MushroomDragon","zh":"菇咚","en":"Shroomer","dex":"118","rank":1520,"pri":152000,"isVariant":false,"minLv":30,"maxLv":77},"MushroomDragon_Dark":{"id":"MushroomDragon_Dark","zh":"菇波","en":"Shroomer Noct","dex":"118B","rank":1450,"pri":145000,"isVariant":true,"minLv":39,"maxLv":77},"SmallArmadillo":{"id":"SmallArmadillo","zh":"球犰","en":"Kikit","dex":"126","rank":2310,"pri":231000,"isVariant":false,"minLv":30,"maxLv":49},"CandleGhost":{"id":"CandleGhost","zh":"恐炬灵","en":"Sootseer","dex":"135","rank":980,"pri":98000,"isVariant":false,"minLv":45,"maxLv":67},"ScorpionMan":{"id":"ScorpionMan","zh":"蛊刺妖","en":"Prixter","dex":"141","rank":1510,"pri":151000,"isVariant":false,"minLv":48,"maxLv":49},"ScorpionMan_Electric":{"id":"ScorpionMan_Electric","zh":"电针妖","en":"Prixter Lux","dex":"141B","rank":850,"pri":85000,"isVariant":true,"minLv":65,"maxLv":70},"WingGolem":{"id":"WingGolem","zh":"泰锋","en":"Knocklem","dex":"159","rank":260,"pri":26000,"isVariant":false,"minLv":55,"maxLv":80},"WingGolem_Fire":{"id":"WingGolem_Fire","zh":"丹烽","en":"Knocklem Ignis","dex":"159B","rank":210,"pri":21000,"isVariant":true,"minLv":65,"maxLv":73},"GuardianDog":{"id":"GuardianDog","zh":"八云犬","en":"Yakumo","dex":"127","rank":2230,"pri":223000,"isVariant":false,"minLv":30,"maxLv":65},"SifuDog":{"id":"SifuDog","zh":"汪宗师","en":"Dogen","dex":"155","rank":1460,"pri":146000,"isVariant":false,"minLv":51,"maxLv":56},"FeatherOstrich":{"id":"FeatherOstrich","zh":"战冠雀","en":"Dazemu","dex":"123","rank":2210,"pri":221000,"isVariant":false,"minLv":31,"maxLv":49},"MimicDog":{"id":"MimicDog","zh":"旺财","en":"Mimog","dex":"144","rank":1740,"pri":174000,"isVariant":false,"minLv":5,"maxLv":80},"DarkAlien":{"id":"DarkAlien","zh":"杰诺贝达","en":"Xenovader","dex":"145","rank":1820,"pri":182000,"isVariant":false,"minLv":25,"maxLv":30},"WhiteAlienDragon":{"id":"WhiteAlienDragon","zh":"杰诺路达","en":"Xenogard","dex":"146","rank":990,"pri":99000,"isVariant":false,"minLv":null,"maxLv":null},"VolcanoDragon":{"id":"VolcanoDragon","zh":"流焰龙","en":"Moldron","dex":"105","rank":750,"pri":75000,"isVariant":false,"minLv":32,"maxLv":80},"VolcanoDragon_Ice":{"id":"VolcanoDragon_Ice","zh":"川霜龙","en":"Moldron Cryst","dex":"105B","rank":380,"pri":38000,"isVariant":true,"minLv":78,"maxLv":78},"DarkMechaDragon":{"id":"DarkMechaDragon","zh":"杰诺多兰","en":"Xenolord","dex":"196","rank":400,"pri":40000,"isVariant":false,"minLv":null,"maxLv":null},"GhostRabbit":{"id":"GhostRabbit","zh":"魅爱莉","en":"Nitemary","dex":"148","rank":1230,"pri":123000,"isVariant":false,"minLv":50,"maxLv":67},"GhostRabbit_Grass":{"id":"GhostRabbit_Grass","zh":"碧艾莉","en":"Nitemary Botan","dex":"148B","rank":1320,"pri":132000,"isVariant":true,"minLv":50,"maxLv":54},"NightBlueHorse":{"id":"NightBlueHorse","zh":"夜冥驹","en":"Starryon","dex":"130","rank":1150,"pri":115000,"isVariant":false,"minLv":42,"maxLv":80},"NightBlueHorse_Neutral":{"id":"NightBlueHorse_Neutral","zh":"日耀驹","en":"Starryon Primo","dex":"130B","rank":430,"pri":43000,"isVariant":true,"minLv":74,"maxLv":76},"WhiteShieldDragon":{"id":"WhiteShieldDragon","zh":"艾基鲁迦","en":"Silvegis","dex":"160","rank":560,"pri":56000,"isVariant":false,"minLv":59,"maxLv":80},"BlackPuppy":{"id":"BlackPuppy","zh":"墨丸","en":"Smokie","dex":"149","rank":1760,"pri":176000,"isVariant":false,"minLv":30,"maxLv":66},"BlackPuppy_Ice":{"id":"BlackPuppy_Ice","zh":"冬丸","en":"Smokie Cryst","dex":"149B","rank":1610,"pri":161000,"isVariant":true,"minLv":62,"maxLv":64},"WhiteDeer":{"id":"WhiteDeer","zh":"净世鹿","en":"Celesdir","dex":"157","rank":570,"pri":57000,"isVariant":false,"minLv":54,"maxLv":80},"WhiteDeer_Dark":{"id":"WhiteDeer_Dark","zh":"织夜鹿","en":"Celesdir Noct","dex":"157B","rank":270,"pri":27000,"isVariant":true,"minLv":79,"maxLv":79},"KingWhale":{"id":"KingWhale","zh":"奥沧鲸","en":"Panthalus","dex":"203","rank":20,"pri":2000,"isVariant":false,"minLv":null,"maxLv":null},"MysteryMask":{"id":"MysteryMask","zh":"面惧","en":"Omascul","dex":"150","rank":1140,"pri":114000,"isVariant":false,"minLv":50,"maxLv":66},"HoodGhost":{"id":"HoodGhost","zh":"兜兜灵","en":"Hoodle","dex":"166","rank":1770,"pri":177000,"isVariant":false,"minLv":65,"maxLv":69},"Sekhmet":{"id":"Sekhmet","zh":"塞赫麦特","en":"Sekhmet","dex":"140","rank":870,"pri":87000,"isVariant":false,"minLv":37,"maxLv":80},"ElecLizard":{"id":"ElecLizard","zh":"电懒懒","en":"Slowatt","dex":"167","rank":1750,"pri":175000,"isVariant":false,"minLv":65,"maxLv":66},"GrimGirl":{"id":"GrimGirl","zh":"幽恋娜","en":"Splatterina","dex":"153","rank":780,"pri":78000,"isVariant":false,"minLv":52,"maxLv":80},"PurpleSpider":{"id":"PurpleSpider","zh":"桃蛛娘","en":"Tarantriss","dex":"71","rank":1730,"pri":173000,"isVariant":false,"minLv":20,"maxLv":58},"BlueThunderHorse":{"id":"BlueThunderHorse","zh":"驭雷马","en":"Azurmane","dex":"161","rank":420,"pri":42000,"isVariant":false,"minLv":57,"maxLv":80},"RockBeast":{"id":"RockBeast","zh":"磐峰兽","en":"Pierdon","dex":"131","rank":1110,"pri":111000,"isVariant":false,"minLv":42,"maxLv":50},"RockBeast_Ice":{"id":"RockBeast_Ice","zh":"寒峰兽","en":"Pierdon Cryst","dex":"131B","rank":460,"pri":46000,"isVariant":true,"minLv":68,"maxLv":69},"OctopusGirl":{"id":"OctopusGirl","zh":"墨沫姬","en":"Gloopie","dex":"48","rank":2530,"pri":253000,"isVariant":false,"minLv":10,"maxLv":80},"OctopusGirl_Neutral":{"id":"OctopusGirl_Neutral","zh":"梦沫姬","en":"Gloopie Primo","dex":"48B","rank":1630,"pri":163000,"isVariant":true,"minLv":65,"maxLv":66},"IceNarwhal":{"id":"IceNarwhal","zh":"凉晶鲸","en":"Whalaska","dex":"151","rank":710,"pri":71000,"isVariant":false,"minLv":42,"maxLv":80},"IceNarwhal_Fire":{"id":"IceNarwhal_Fire","zh":"桃晶鲸","en":"Whalaska Ignis","dex":"151B","rank":370,"pri":37000,"isVariant":true,"minLv":58,"maxLv":80},"JellyfishFairy":{"id":"JellyfishFairy","zh":"海月仙","en":"Jelliette","dex":"45","rank":2650,"pri":265000,"isVariant":false,"minLv":6,"maxLv":80},"Kitsunebi_Ice":{"id":"Kitsunebi_Ice","zh":"雪绒狐","en":"Foxparks Cryst","dex":"29B","rank":2500,"pri":250000,"isVariant":true,"minLv":15,"maxLv":58},"BerryGoat_Dark":{"id":"BerryGoat_Dark","zh":"郁木羊","en":"Caprity Noct","dex":"34B","rank":1940,"pri":194000,"isVariant":true,"minLv":23,"maxLv":58},"PinkRabbit_Grass":{"id":"PinkRabbit_Grass","zh":"艾小兔","en":"Ribbuny Botan","dex":"44B","rank":2460,"pri":246000,"isVariant":true,"minLv":18,"maxLv":58},"Werewolf_Ice":{"id":"Werewolf_Ice","zh":"霜镰魔","en":"Loupmoon Cryst","dex":"56B","rank":1290,"pri":129000,"isVariant":true,"minLv":30,"maxLv":66},"AmaterasuWolf_Dark":{"id":"AmaterasuWolf_Dark","zh":"幽焰狼","en":"Kitsun Noct","dex":"111B","rank":800,"pri":80000,"isVariant":true,"minLv":56,"maxLv":66},"RaijinDaughter_Water":{"id":"RaijinDaughter_Water","zh":"天阴童子","en":"Dazzi Noct","dex":"92B","rank":1910,"pri":191000,"isVariant":true,"minLv":20,"maxLv":66},"WhiteTiger_Ground":{"id":"WhiteTiger_Ground","zh":"金棘兽","en":"Cryolinx Terra","dex":"132B","rank":470,"pri":47000,"isVariant":true,"minLv":56,"maxLv":64},"FengyunDeeper_Electric":{"id":"FengyunDeeper_Electric","zh":"雷隐鹿","en":"Fenglope Lux","dex":"83B","rank":900,"pri":90000,"isVariant":true,"minLv":57,"maxLv":80},"Horus_Water":{"id":"Horus_Water","zh":"伊西斯","en":"Faleris Aqua","dex":"188B","rank":450,"pri":45000,"isVariant":true,"minLv":56,"maxLv":80},"SnowTigerBeastman":{"id":"SnowTigerBeastman","zh":"霜牙王","en":"Bastigor","dex":"191","rank":50,"pri":5000,"isVariant":false,"minLv":75,"maxLv":80},"SnakeGirl":{"id":"SnakeGirl","zh":"梅杜娜","en":"Venusa","dex":"178","rank":970,"pri":97000,"isVariant":false,"minLv":75,"maxLv":77},"GhostAnglerfish":{"id":"GhostAnglerfish","zh":"冥灯鱼","en":"Ghangler","dex":"97","rank":880,"pri":88000,"isVariant":false,"minLv":30,"maxLv":80},"GhostAnglerfish_Fire":{"id":"GhostAnglerfish_Fire","zh":"炙灯鱼","en":"Ghangler Ignis","dex":"97B","rank":720,"pri":72000,"isVariant":true,"minLv":null,"maxLv":null},"IceWitch":{"id":"IceWitch","zh":"冰姬灵","en":"Icelyn","dex":"119","rank":1260,"pri":126000,"isVariant":false,"minLv":null,"maxLv":null},"ClownRabbit":{"id":"ClownRabbit","zh":"拉比耶尔","en":"Dupin","dex":"176","rank":520,"pri":52000,"isVariant":false,"minLv":55,"maxLv":74},"LegendDeer":{"id":"LegendDeer","zh":"默世鹿","en":"Hartalis","dex":"197","rank":90,"pri":9000,"isVariant":false,"minLv":null,"maxLv":null},"LeafMomonga":{"id":"LeafMomonga","zh":"达鼠泥","en":"Herbil","dex":"10","rank":2630,"pri":263000,"isVariant":false,"minLv":1,"maxLv":50},"SmallYeti":{"id":"SmallYeti","zh":"雪墩墩","en":"Snugloo","dex":"133","rank":2390,"pri":239000,"isVariant":false,"minLv":32,"maxLv":34},"IceCrocodile":{"id":"IceCrocodile","zh":"肚肚鳄","en":"Munchill","dex":"86","rank":2130,"pri":213000,"isVariant":false,"minLv":10,"maxLv":60},"CactusDoll":{"id":"CactusDoll","zh":"球抱苞","en":"Needoll","dex":"100","rank":2420,"pri":242000,"isVariant":false,"minLv":31,"maxLv":40},"CactusDoll_Dark":{"id":"CactusDoll_Dark","zh":"妖抱苞","en":"Needoll Noct","dex":"100B","rank":1580,"pri":158000,"isVariant":true,"minLv":33,"maxLv":36},"MushroomLady":{"id":"MushroomLady","zh":"红菇娘","en":"Mycora","dex":"179","rank":760,"pri":76000,"isVariant":false,"minLv":75,"maxLv":78},"StuffedShark":{"id":"StuffedShark","zh":"布偶鲨","en":"Finsider","dex":"88","rank":2450,"pri":245000,"isVariant":false,"minLv":1,"maxLv":40},"StuffedShark_Fire":{"id":"StuffedShark_Fire","zh":"粉粉布偶鲨","en":"Finsider Ignis","dex":"88B","rank":2240,"pri":581,"isVariant":true,"minLv":null,"maxLv":null},"FoxExorcist":{"id":"FoxExorcist","zh":"昭炎狐","en":"Flaracle","dex":"174","rank":390,"pri":39000,"isVariant":false,"minLv":65,"maxLv":80},"IceSeal":{"id":"IceSeal","zh":"香草豹冰","en":"Polapup","dex":"72","rank":1660,"pri":166000,"isVariant":false,"minLv":33,"maxLv":60},"IceSeal_Ground":{"id":"IceSeal_Ground","zh":"巧克力豹冰","en":"Polapup Terra","dex":"72B","rank":1100,"pri":110000,"isVariant":true,"minLv":55,"maxLv":60},"CloverFairy":{"id":"CloverFairy","zh":"幸叶茸","en":"Clovee","dex":"14","rank":2970,"pri":297000,"isVariant":false,"minLv":3,"maxLv":13},"ElecPomeranian":{"id":"ElecPomeranian","zh":"电汪汪","en":"Puffolt","dex":"62","rank":2360,"pri":236000,"isVariant":false,"minLv":18,"maxLv":69},"GhostBlackCat":{"id":"GhostBlackCat","zh":"念影喵","en":"Wispaw","dex":"50","rank":2250,"pri":225000,"isVariant":false,"minLv":11,"maxLv":73},"ThiefBird":{"id":"ThiefBird","zh":"盗影鸦","en":"Roujay","dex":"177","rank":530,"pri":53000,"isVariant":false,"minLv":74,"maxLv":78},"OniGhostGirl":{"id":"OniGhostGirl","zh":"吓丝妮","en":"Bakemi","dex":"168","rank":1540,"pri":154000,"isVariant":false,"minLv":65,"maxLv":69},"Plesiosaur":{"id":"Plesiosaur","zh":"梁叶龙","en":"Braloha","dex":"110","rank":1030,"pri":103000,"isVariant":false,"minLv":33,"maxLv":80},"TropicalOstrich":{"id":"TropicalOstrich","zh":"咕咕桑葩","en":"Palumba","dex":"106","rank":1240,"pri":124000,"isVariant":false,"minLv":32,"maxLv":50},"GrassGolem":{"id":"GrassGolem","zh":"双心岩傀","en":"Dualith","dex":"138","rank":510,"pri":51000,"isVariant":false,"minLv":46,"maxLv":80},"GrassGolem_Dark":{"id":"GrassGolem_Dark","zh":"咒心岩傀","en":"Dualith Noct","dex":"138B","rank":250,"pri":25000,"isVariant":true,"minLv":70,"maxLv":77},"SnowPeafowl":{"id":"SnowPeafowl","zh":"白真雪雀","en":"Frostplume","dex":"114","rank":860,"pri":86000,"isVariant":false,"minLv":39,"maxLv":68},"CubeTurtle":{"id":"CubeTurtle","zh":"重岩龟","en":"Tetroise","dex":"142","rank":790,"pri":79000,"isVariant":false,"minLv":48,"maxLv":80},"CubeTurtle_Neutral":{"id":"CubeTurtle_Neutral","zh":"净岩龟","en":"Tetroise Primo","dex":"142B","rank":200,"pri":20000,"isVariant":true,"minLv":60,"maxLv":78},"LongCat":{"id":"LongCat","zh":"喵璐璐","en":"Valentail","dex":"162","rank":1900,"pri":190000,"isVariant":false,"minLv":63,"maxLv":69},"JellyfishGhost":{"id":"JellyfishGhost","zh":"海月灵","en":"Jellroy","dex":"46","rank":2590,"pri":259000,"isVariant":false,"minLv":14,"maxLv":80},"ThunderFluffyBird":{"id":"ThunderFluffyBird","zh":"雷云鹫","en":"Dynamoff","dex":"172","rank":1400,"pri":140000,"isVariant":false,"minLv":63,"maxLv":69},"MoonChild":{"id":"MoonChild","zh":"缀夜星","en":"Wistella","dex":"181","rank":1180,"pri":118000,"isVariant":false,"minLv":66,"maxLv":78},"SamuraiDog":{"id":"SamuraiDog","zh":"宗铭丸","en":"Pupperai","dex":"13","rank":2930,"pri":293000,"isVariant":false,"minLv":2,"maxLv":4},"PoseidonOrca":{"id":"PoseidonOrca","zh":"海皇鲸","en":"Neptilius","dex":"201","rank":160,"pri":16000,"isVariant":false,"minLv":60,"maxLv":60},"SwordCutlassfish":{"id":"SwordCutlassfish","zh":"鞘刀鱼","en":"Skutlass","dex":"128","rank":1420,"pri":142000,"isVariant":false,"minLv":30,"maxLv":66},"SwordCutlassfish_Fire":{"id":"SwordCutlassfish_Fire","zh":"炼刃鱼","en":"Skutlass Ignis","dex":"128B","rank":1590,"pri":159000,"isVariant":true,"minLv":40,"maxLv":44},"YakushimaMonster001":{"id":"YakushimaMonster001","zh":"绿史莱姆","en":"Green Slime","dex":"10002","rank":3100,"pri":310000,"isVariant":false,"minLv":33,"maxLv":35},"YakushimaMonster001_Blue":{"id":"YakushimaMonster001_Blue","zh":"蓝史莱姆","en":"Blue Slime","dex":"10003","rank":3100,"pri":310000,"isVariant":false,"minLv":33,"maxLv":35},"YakushimaMonster001_Red":{"id":"YakushimaMonster001_Red","zh":"红史莱姆","en":"Red Slime","dex":"10007","rank":3100,"pri":310000,"isVariant":false,"minLv":36,"maxLv":41},"YakushimaMonster001_Purple":{"id":"YakushimaMonster001_Purple","zh":"紫史莱姆","en":"Purple Slime","dex":"10005","rank":3100,"pri":310000,"isVariant":false,"minLv":36,"maxLv":41},"YakushimaMonster001_Pink":{"id":"YakushimaMonster001_Pink","zh":"夜明史莱姆","en":"Illuminant Slime","dex":"10004","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},"YakushimaMonster001_Rainbow":{"id":"YakushimaMonster001_Rainbow","zh":"彩虹史莱姆","en":"Rainbow Slime","dex":"10006","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},"YakushimaMonster002":{"id":"YakushimaMonster002","zh":"附魔剑","en":"Enchanted Sword","dex":"10008","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},"YakushimaMonster003":{"id":"YakushimaMonster003","zh":"洞穴蝙蝠","en":"Cave Bat","dex":"10009","rank":3100,"pri":310000,"isVariant":false,"minLv":36,"maxLv":41},"YakushimaMonster003_Purple":{"id":"YakushimaMonster003_Purple","zh":"夜明蝙蝠","en":"Illuminant Bat","dex":"10010","rank":3100,"pri":310000,"isVariant":false,"minLv":42,"maxLv":44},"YakushimaBoss001":{"id":"YakushimaBoss001","zh":"克苏鲁之眼","en":"Eye of Cthulhu","dex":"10000","rank":3100,"pri":310000,"isVariant":false,"minLv":45,"maxLv":45},"YakushimaBoss001_Small":{"id":"YakushimaBoss001_Small","zh":"恶魔眼","en":"Demon Eye","dex":"10001","rank":3100,"pri":310000,"isVariant":false,"minLv":33,"maxLv":35},"MummyPal":{"id":"MummyPal","zh":"缚乃伊","en":"Gildra","dex":"120","rank":1170,"pri":117000,"isVariant":false,"minLv":39,"maxLv":80},"KingSunfish":{"id":"KingSunfish","zh":"曼波王","en":"Solmora","dex":"169","rank":1370,"pri":137000,"isVariant":false,"minLv":66,"maxLv":67},"KingSunfish_Thunder":{"id":"KingSunfish_Thunder","zh":"曼波皇","en":"Solmora Lux","dex":"169B","rank":1000,"pri":100000,"isVariant":true,"minLv":76,"maxLv":78},"MonochromeQueen":{"id":"MonochromeQueen","zh":"墨罗娜","en":"Solenne","dex":"182","rank":280,"pri":28000,"isVariant":false,"minLv":76,"maxLv":78},"ElecSnail":{"id":"ElecSnail","zh":"电涡蜗","en":"Snock","dex":"163","rank":1780,"pri":178000,"isVariant":false,"minLv":63,"maxLv":69},"ElecSnail_Ground":{"id":"ElecSnail_Ground","zh":"金涡蜗","en":"Snock Lux","dex":"163B","rank":1500,"pri":150000,"isVariant":true,"minLv":74,"maxLv":76},"LanternButler":{"id":"LanternButler","zh":"妖焰灯","en":"Loomen","dex":"180","rank":890,"pri":89000,"isVariant":false,"minLv":75,"maxLv":77},"SumoDog":{"id":"SumoDog","zh":"力士獒","en":"Bulldosu","dex":"156","rank":1190,"pri":119000,"isVariant":false,"minLv":53,"maxLv":56},"VenusFlytrap":{"id":"VenusFlytrap","zh":"颚莉丝","en":"Carnibora","dex":"136","rank":1700,"pri":170000,"isVariant":false,"minLv":45,"maxLv":48},"FluffyBird":{"id":"FluffyBird","zh":"雪绵啾","en":"Muffly","dex":"59","rank":2480,"pri":248000,"isVariant":false,"minLv":15,"maxLv":65},"DandelionGirl":{"id":"DandelionGirl","zh":"蒲蒲飞芽","en":"Souffline","dex":"164","rank":2000,"pri":200000,"isVariant":false,"minLv":63,"maxLv":69},"ClioneTwins":{"id":"ClioneTwins","zh":"莉欧·莉涅","en":"Amione","dex":"47","rank":2520,"pri":252000,"isVariant":false,"minLv":9,"maxLv":65},"DarkFlameFox":{"id":"DarkFlameFox","zh":"紫狐娇","en":"Majex","dex":"115","rank":1010,"pri":101000,"isVariant":false,"minLv":35,"maxLv":77},"RedFlowerBird":{"id":"RedFlowerBird","zh":"大红呱","en":"Tropicaw","dex":"173","rank":1350,"pri":135000,"isVariant":false,"minLv":63,"maxLv":69},"SleeveRabbit":{"id":"SleeveRabbit","zh":"兔绣袖","en":"Lapure","dex":"170","rank":810,"pri":81000,"isVariant":false,"minLv":65,"maxLv":69},"LotusDragon":{"id":"LotusDragon","zh":"沁莲龙","en":"Ophydia","dex":"175","rank":230,"pri":23000,"isVariant":false,"minLv":69,"maxLv":80},"BlueSkyDragon":{"id":"BlueSkyDragon","zh":"霄龙","en":"Shaolong","dex":"192","rank":40,"pri":4000,"isVariant":false,"minLv":76,"maxLv":78},"PandaGirl":{"id":"PandaGirl","zh":"莉芳","en":"Leafan","dex":"90","rank":1410,"pri":141000,"isVariant":false,"minLv":28,"maxLv":69},"GrassMinotaur":{"id":"GrassMinotaur","zh":"密林陶洛斯","en":"Elgrove","dex":"81","rank":2020,"pri":202000,"isVariant":false,"minLv":24,"maxLv":80},"GrassMinotaur_Ice":{"id":"GrassMinotaur_Ice","zh":"冰峰陶洛斯","en":"Elgrove Cryst","dex":"81B","rank":440,"pri":44000,"isVariant":true,"minLv":75,"maxLv":77},"Mothman":{"id":"Mothman","zh":"暮尘蛾","en":"Silvance","dex":"193","rank":80,"pri":8000,"isVariant":false,"minLv":null,"maxLv":null},"GhostDragon":{"id":"GhostDragon","zh":"灵曦龙","en":"Eidrolon","dex":"171","rank":300,"pri":30000,"isVariant":false,"minLv":65,"maxLv":80},"GhostDragon_Fire":{"id":"GhostDragon_Fire","zh":"狱熙龙","en":"Eidrolon Ignis","dex":"171B","rank":140,"pri":14000,"isVariant":true,"minLv":75,"maxLv":77},"FlowerPrince":{"id":"FlowerPrince","zh":"夜蔓爵","en":"Dandilord","dex":"194","rank":60,"pri":6000,"isVariant":false,"minLv":null,"maxLv":null},"KabukiMan":{"id":"KabukiMan","zh":"燎火舞伶","en":"Renjishi","dex":"183","rank":290,"pri":29000,"isVariant":false,"minLv":78,"maxLv":80},"DomeArmorDragon":{"id":"DomeArmorDragon","zh":"磐甲龙","en":"Aegidron","dex":"184","rank":30,"pri":3000,"isVariant":false,"minLv":79,"maxLv":79}},"UNIQUE_COMBOS":[{"a":"BadCatgirl","b":"AmaterasuWolf","ga":"WILDCARD","gb":"WILDCARD","child":"AmaterasuWolf_Dark"},{"a":"GhostBeast","b":"Baphomet","ga":"WILDCARD","gb":"WILDCARD","child":"Baphomet_Dark"},{"a":"Bastet","b":"Penguin","ga":"WILDCARD","gb":"WILDCARD","child":"Bastet_Ice"},{"a":"PurpleSpider","b":"BerryGoat","ga":"WILDCARD","gb":"WILDCARD","child":"BerryGoat_Dark"},{"a":"IceFox","b":"BirdDragon","ga":"WILDCARD","gb":"WILDCARD","child":"BirdDragon_Ice"},{"a":"BlackPuppy","b":"IceCrocodile","ga":"WILDCARD","gb":"WILDCARD","child":"BlackPuppy_Ice"},{"a":"SnowPeafowl","b":"BlueDragon","ga":"WILDCARD","gb":"WILDCARD","child":"BlueDragon_Ice"},{"a":"LavaGirl","b":"BluePlatypus","ga":"WILDCARD","gb":"WILDCARD","child":"BluePlatypus_Fire"},{"a":"BlueberryFairy","b":"CactusDoll","ga":"WILDCARD","gb":"WILDCARD","child":"CactusDoll_Dark"},{"a":"ThunderDog","b":"CaptainPenguin","ga":"WILDCARD","gb":"WILDCARD","child":"CaptainPenguin_Black"},{"a":"CatMage","b":"FoxMage","ga":"FEMALE","gb":"MALE","child":"CatMage_Fire"},{"a":"WhiteDeer","b":"CubeTurtle","ga":"WILDCARD","gb":"WILDCARD","child":"CubeTurtle_Neutral"},{"a":"WingGolem","b":"DarkScorpion","ga":"WILDCARD","gb":"WILDCARD","child":"DarkScorpion_Ground"},{"a":"WindChimes","b":"Deer","ga":"WILDCARD","gb":"WILDCARD","child":"Deer_Ground"},{"a":"ElecSnail","b":"TentacleTurtle_Ground","ga":"WILDCARD","gb":"WILDCARD","child":"ElecSnail_Ground"},{"a":"Serpent","b":"FairyDragon","ga":"WILDCARD","gb":"WILDCARD","child":"FairyDragon_Water"},{"a":"BlueThunderHorse","b":"FengyunDeeper","ga":"WILDCARD","gb":"WILDCARD","child":"FengyunDeeper_Electric"},{"a":"FireKirin","b":"CatMage","ga":"WILDCARD","gb":"WILDCARD","child":"FireKirin_Dark"},{"a":"ThunderDog","b":"FlowerDinosaur","ga":"WILDCARD","gb":"WILDCARD","child":"FlowerDinosaur_Electric"},{"a":"FlowerDoll","b":"Ronin","ga":"WILDCARD","gb":"WILDCARD","child":"FlowerDoll_Fire"},{"a":"Kirin","b":"FlyingManta","ga":"WILDCARD","gb":"WILDCARD","child":"FlyingManta_Thunder"},{"a":"CatMage","b":"FoxMage","ga":"MALE","gb":"FEMALE","child":"FoxMage_Dark"},{"a":"CandleGhost","b":"GhostAnglerfish","ga":"WILDCARD","gb":"WILDCARD","child":"GhostAnglerfish_Fire"},{"a":"GhostDragon","b":"Suzaku","ga":"WILDCARD","gb":"WILDCARD","child":"GhostDragon_Fire"},{"a":"GhostRabbit","b":"FlowerDoll","ga":"WILDCARD","gb":"WILDCARD","child":"GhostRabbit_Grass"},{"a":"SmallArmadillo","b":"Gorilla","ga":"WILDCARD","gb":"WILDCARD","child":"Gorilla_Ground"},{"a":"GrassGolem","b":"CandleGhost","ga":"WILDCARD","gb":"WILDCARD","child":"GrassGolem_Dark"},{"a":"Yeti","b":"GrassMammoth","ga":"WILDCARD","gb":"WILDCARD","child":"GrassMammoth_Ice"},{"a":"GrassMinotaur","b":"RockBeast_Ice","ga":"WILDCARD","gb":"WILDCARD","child":"GrassMinotaur_Ice"},{"a":"ElecPanda","b":"GrassPanda","ga":"WILDCARD","gb":"WILDCARD","child":"GrassPanda_Electric"},{"a":"ThunderBird","b":"HadesBird","ga":"WILDCARD","gb":"WILDCARD","child":"HadesBird_Electric"},{"a":"Penguin","b":"Hedgehog","ga":"WILDCARD","gb":"WILDCARD","child":"Hedgehog_Ice"},{"a":"HerculesBeetle","b":"DrillGame","ga":"WILDCARD","gb":"WILDCARD","child":"HerculesBeetle_Ground"},{"a":"Horus","b":"Umihebi","ga":"WILDCARD","gb":"WILDCARD","child":"Horus_Water"},{"a":"IceHorse","b":"HadesBird","ga":"WILDCARD","gb":"WILDCARD","child":"IceHorse_Dark"},{"a":"IceNarwhal","b":"WeaselDragon_Fire","ga":"WILDCARD","gb":"WILDCARD","child":"IceNarwhal_Fire"},{"a":"IceSeal","b":"Serpent_Ground","ga":"WILDCARD","gb":"WILDCARD","child":"IceSeal_Ground"},{"a":"KendoFrog","b":"Ronin_Dark","ga":"WILDCARD","gb":"WILDCARD","child":"KendoFrog_Dark"},{"a":"IceDeer","b":"KingAlpaca","ga":"WILDCARD","gb":"WILDCARD","child":"KingAlpaca_Ice"},{"a":"KingSunfish","b":"ElecLizard","ga":"WILDCARD","gb":"WILDCARD","child":"KingSunfish_Thunder"},{"a":"SnowPeafowl","b":"Kirin","ga":"WILDCARD","gb":"WILDCARD","child":"Kirin_Ice"},{"a":"IceFox","b":"Kitsunebi","ga":"WILDCARD","gb":"WILDCARD","child":"Kitsunebi_Ice"},{"a":"LazyCatfish","b":"Deer_Ground","ga":"WILDCARD","gb":"WILDCARD","child":"LazyCatfish_Gold"},{"a":"LazyDragon","b":"ElecCat","ga":"WILDCARD","gb":"WILDCARD","child":"LazyDragon_Electric"},{"a":"LilyQueen","b":"DarkScorpion","ga":"WILDCARD","gb":"WILDCARD","child":"LilyQueen_Dark"},{"a":"LizardMan","b":"LavaGirl","ga":"WILDCARD","gb":"WILDCARD","child":"LizardMan_Fire"},{"a":"Manticore","b":"CatVampire","ga":"WILDCARD","gb":"WILDCARD","child":"Manticore_Dark"},{"a":"LavaGirl","b":"Monkey","ga":"WILDCARD","gb":"WILDCARD","child":"Monkey_Fire"},{"a":"PinkRabbit","b":"NegativeOctopus","ga":"WILDCARD","gb":"WILDCARD","child":"NegativeOctopus_Neutral"},{"a":"WhiteDeer","b":"NightBlueHorse","ga":"WILDCARD","gb":"WILDCARD","child":"NightBlueHorse_Neutral"},{"a":"NightLady","b":"NightLady_Dark","ga":"WILDCARD","gb":"WILDCARD","child":"NightLady"},{"a":"LongCat","b":"OctopusGirl","ga":"WILDCARD","gb":"WILDCARD","child":"OctopusGirl_Neutral"},{"a":"ElecCat","b":"Penguin","ga":"WILDCARD","gb":"WILDCARD","child":"Penguin_Electric"},{"a":"LittleBriarRose","b":"PinkRabbit","ga":"WILDCARD","gb":"WILDCARD","child":"PinkRabbit_Grass"},{"a":"MysteryMask","b":"RaijinDaughter","ga":"WILDCARD","gb":"WILDCARD","child":"RaijinDaughter_Water"},{"a":"RobinHood","b":"CuteMole","ga":"WILDCARD","gb":"WILDCARD","child":"RobinHood_Ground"},{"a":"Yeti","b":"RockBeast","ga":"WILDCARD","gb":"WILDCARD","child":"RockBeast_Ice"},{"a":"CandleGhost","b":"Ronin","ga":"WILDCARD","gb":"WILDCARD","child":"Ronin_Dark"},{"a":"SakuraSaurus","b":"BluePlatypus","ga":"WILDCARD","gb":"WILDCARD","child":"SakuraSaurus_Water"},{"a":"ScorpionMan","b":"HadesBird_Electric","ga":"WILDCARD","gb":"WILDCARD","child":"ScorpionMan_Electric"},{"a":"LazyCatfish","b":"Serpent","ga":"WILDCARD","gb":"WILDCARD","child":"Serpent_Ground"},{"a":"SharkKid","b":"FlameBambi","ga":"WILDCARD","gb":"WILDCARD","child":"SharkKid_Fire"},{"a":"LeafPrincess","b":"SkyDragon","ga":"WILDCARD","gb":"WILDCARD","child":"SkyDragon_Grass"},{"a":"StuffedShark","b":"SharkKid_Fire","ga":"WILDCARD","gb":"WILDCARD","child":"StuffedShark_Fire"},{"a":"Suzaku","b":"Umihebi","ga":"WILDCARD","gb":"WILDCARD","child":"Suzaku_Water"},{"a":"SmallArmadillo","b":"SweetsSheep","ga":"WILDCARD","gb":"WILDCARD","child":"SweetsSheep_Ground"},{"a":"SwordCutlassfish","b":"SharkKid_Fire","ga":"WILDCARD","gb":"WILDCARD","child":"SwordCutlassfish_Fire"},{"a":"DrillGame","b":"TentacleTurtle","ga":"WILDCARD","gb":"WILDCARD","child":"TentacleTurtle_Ground"},{"a":"SnowPeafowl","b":"ThunderBird","ga":"WILDCARD","gb":"WILDCARD","child":"ThunderBird_Ice"},{"a":"ThunderDog","b":"IceFox","ga":"WILDCARD","gb":"WILDCARD","child":"ThunderDog_Ice"},{"a":"Umihebi","b":"Manticore","ga":"WILDCARD","gb":"WILDCARD","child":"Umihebi_Fire"},{"a":"VolcanicMonster","b":"IceFox","ga":"WILDCARD","gb":"WILDCARD","child":"VolcanicMonster_Ice"},{"a":"VolcanoDragon","b":"VolcanicMonster_Ice","ga":"WILDCARD","gb":"WILDCARD","child":"VolcanoDragon_Ice"},{"a":"WeaselDragon","b":"FlameBuffalo","ga":"WILDCARD","gb":"WILDCARD","child":"WeaselDragon_Fire"},{"a":"Werewolf","b":"MopKing","ga":"WILDCARD","gb":"WILDCARD","child":"Werewolf_Ice"},{"a":"GoldenHorse","b":"Deer_Ground","ga":"WILDCARD","gb":"WILDCARD","child":"WhiteDeer"},{"a":"WhiteDeer","b":"AmaterasuWolf_Dark","ga":"WILDCARD","gb":"WILDCARD","child":"WhiteDeer_Dark"},{"a":"SleeveRabbit","b":"WhiteMoth","ga":"WILDCARD","gb":"WILDCARD","child":"WhiteMoth_Neutral"},{"a":"WhiteTiger","b":"FeatherOstrich","ga":"WILDCARD","gb":"WILDCARD","child":"WhiteTiger_Ground"},{"a":"WindChimes","b":"MopBaby","ga":"WILDCARD","gb":"WILDCARD","child":"WindChimes_Ice"},{"a":"WingGolem","b":"RedArmorBird","ga":"WILDCARD","gb":"WILDCARD","child":"WingGolem_Fire"},{"a":"YakushimaBoss001_Small","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster001","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster001_Blue","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster001_Pink","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster001_Purple","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster001_Rainbow","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster001_Red","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster002","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster003","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster003_Purple","b":"YakushimaBoss001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001"},{"a":"YakushimaMonster001","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster001_Blue","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster001_Pink","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster001_Purple","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster001_Rainbow","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster001_Red","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster002","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster003","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster003_Purple","b":"YakushimaBoss001_Small","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaBoss001_Small"},{"a":"YakushimaMonster001_Blue","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Blue"},{"a":"YakushimaMonster001_Pink","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Pink"},{"a":"YakushimaMonster001_Pink","b":"YakushimaMonster001_Blue","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Pink"},{"a":"YakushimaMonster001_Purple","b":"YakushimaMonster001_Pink","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Pink"},{"a":"YakushimaMonster001_Red","b":"YakushimaMonster001_Pink","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Pink"},{"a":"YakushimaMonster001_Purple","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Purple"},{"a":"YakushimaMonster001_Purple","b":"YakushimaMonster001_Blue","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Purple"},{"a":"YakushimaMonster001_Red","b":"YakushimaMonster001_Blue","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Purple"},{"a":"YakushimaMonster001_Red","b":"YakushimaMonster001_Purple","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Purple"},{"a":"YakushimaMonster001_Rainbow","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster001_Rainbow","b":"YakushimaMonster001_Blue","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster001_Rainbow","b":"YakushimaMonster001_Pink","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster001_Rainbow","b":"YakushimaMonster001_Purple","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster001_Red","b":"YakushimaMonster001_Rainbow","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster002","b":"YakushimaMonster001_Rainbow","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003","b":"YakushimaMonster001_Blue","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003","b":"YakushimaMonster001_Pink","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003","b":"YakushimaMonster001_Rainbow","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003","b":"YakushimaMonster001_Red","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster001_Blue","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster001_Pink","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster001_Rainbow","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster001_Red","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Rainbow"},{"a":"YakushimaMonster001_Red","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster001_Red"},{"a":"YakushimaMonster002","b":"YakushimaMonster001","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster002"},{"a":"YakushimaMonster002","b":"YakushimaMonster001_Blue","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster002"},{"a":"YakushimaMonster002","b":"YakushimaMonster001_Pink","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster002"},{"a":"YakushimaMonster002","b":"YakushimaMonster001_Purple","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster002"},{"a":"YakushimaMonster002","b":"YakushimaMonster001_Red","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster002"},{"a":"YakushimaMonster003","b":"YakushimaMonster002","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster002"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster002","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster002"},{"a":"YakushimaMonster003","b":"YakushimaMonster001_Purple","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster003_Purple"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster001_Purple","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster003_Purple"},{"a":"YakushimaMonster003_Purple","b":"YakushimaMonster003","ga":"WILDCARD","gb":"WILDCARD","child":"YakushimaMonster003_Purple"}],"GENERIC_EXCLUDED":["AmaterasuWolf_Dark","Baphomet_Dark","Bastet_Ice","BerryGoat_Dark","BirdDragon_Ice","BlackCentaur","BlackGriffon","BlackPuppy_Ice","BlueDragon_Ice","BluePlatypus_Fire","BlueSkyDragon","CactusDoll_Dark","CaptainPenguin_Black","CatMage_Fire","CubeTurtle_Neutral","DarkAlien","DarkMechaDragon","DarkScorpion_Ground","Deer_Ground","ElecPanda","ElecSnail_Ground","FairyDragon_Water","FengyunDeeper_Electric","FireKirin_Dark","FlowerDinosaur_Electric","FlowerDoll_Fire","FlowerPrince","FlyingManta_Thunder","FoxMage_Dark","GhostAnglerfish_Fire","GhostDragon_Fire","GhostRabbit_Grass","Gorilla_Ground","GrassGolem_Dark","GrassMammoth_Ice","GrassMinotaur_Ice","GrassPanda_Electric","HadesBird_Electric","Hedgehog_Ice","HerculesBeetle_Ground","Horus","Horus_Water","IceHorse","IceHorse_Dark","IceNarwhal_Fire","IceSeal_Ground","JetDragon","KendoFrog_Dark","KingAlpaca_Ice","KingBahamut_Dragon","KingSunfish_Thunder","KingWhale","Kirin_Ice","Kitsunebi_Ice","LazyCatfish_Gold","LazyDragon_Electric","LegendDeer","LilyQueen","LilyQueen_Dark","LizardMan_Fire","Manticore_Dark","MimicDog","Monkey_Fire","MoonQueen","Mothman","NegativeOctopus_Neutral","NightBlueHorse_Neutral","NightLady","NightLady_Dark","OctopusGirl_Neutral","Penguin_Electric","PinkRabbit_Grass","PlantSlime_Flower","PoseidonOrca","RaijinDaughter_Water","RobinHood_Ground","RockBeast_Ice","Ronin_Dark","SaintCentaur","SakuraSaurus_Water","ScorpionMan_Electric","Serpent_Ground","SharkKid_Fire","SkyDragon_Grass","SnowTigerBeastman","StuffedShark_Fire","Suzaku_Water","SweetsSheep_Ground","SwordCutlassfish_Fire","TentacleTurtle_Ground","ThunderBird_Ice","ThunderDog_Ice","ThunderDragonMan","Umihebi_Fire","VolcanicMonster_Ice","VolcanoDragon_Ice","WeaselDragon_Fire","Werewolf_Ice","WhiteAlienDragon","WhiteDeer","WhiteDeer_Dark","WhiteMoth_Neutral","WhiteTiger_Ground","WindChimes_Ice","WingGolem_Fire","YakushimaBoss001","YakushimaBoss001_Small","YakushimaMonster001","YakushimaMonster001_Blue","YakushimaMonster001_Pink","YakushimaMonster001_Purple","YakushimaMonster001_Rainbow","YakushimaMonster001_Red","YakushimaMonster002","YakushimaMonster003","YakushimaMonster003_Purple"],"PASSIVES":[{"id":"CraftSpeed_up3","zh":"卓绝技艺","en":"Remarkable Craftsmanship","rank":4,"negative":false,"randomAllowed":true,"desc":"工作速度 +75%"},{"id":"CraftSpeed_up2","zh":"工匠精神","en":"Artisan","rank":3,"negative":false,"randomAllowed":true,"desc":"工作速度 +50%"},{"id":"CraftSpeed_up1","zh":"认真","en":"Serious","rank":1,"negative":false,"randomAllowed":true,"desc":"工作速度 +20%"},{"id":"CraftSpeed_down1","zh":"笨手笨脚","en":"Clumsy","rank":-1,"negative":true,"randomAllowed":true,"desc":"工作速度 -10%"},{"id":"CraftSpeed_down2","zh":"偷懒成瘾","en":"Slacker","rank":-3,"negative":true,"randomAllowed":true,"desc":"工作速度 -30%"},{"id":"Deffence_up3","zh":"金刚之躯","en":"Diamond Body","rank":4,"negative":false,"randomAllowed":true,"desc":"防御力+30%；免疫硬直；免疫击退"},{"id":"Deffence_up2","zh":"顽强肉体","en":"Burly Body","rank":3,"negative":false,"randomAllowed":true,"desc":"防御力+20%；免疫硬直"},{"id":"Deffence_up1","zh":"坚硬皮肤","en":"Hard Skin","rank":1,"negative":false,"randomAllowed":true,"desc":"防御 +10%"},{"id":"Deffence_down1","zh":"弱不禁风","en":"Downtrodden","rank":-1,"negative":true,"randomAllowed":true,"desc":"防御 -10%"},{"id":"Deffence_down2","zh":"骨质疏松","en":"Brittle","rank":-3,"negative":true,"randomAllowed":true,"desc":"防御 -20%"},{"id":"Noukin","zh":"脑筋","en":"Musclehead","rank":2,"negative":false,"randomAllowed":true,"desc":"攻击 +30%；工作速度 -50%"},{"id":"Rare","zh":"稀有","en":"Lucky","rank":4,"negative":false,"randomAllowed":false,"desc":"攻击 +15%；防御 +15%；工作速度 +20%"},{"id":"Legend","zh":"传说","en":"Legend","rank":4,"negative":false,"randomAllowed":false,"desc":"攻击+20%；防御+20%；移动速度提升20%"},{"id":"Witch","zh":"魔女","en":"Siren of the Void","rank":4,"negative":false,"randomAllowed":false,"desc":"暗属性攻击伤害增加30%；冰属性攻击伤害增加30%"},{"id":"EternalFlame","zh":"永炎","en":"Eternal Flame","rank":4,"negative":false,"randomAllowed":false,"desc":"火属性攻击伤害增加30%；雷属性攻击伤害增加30%"},{"id":"Invader","zh":"侵略者","en":"Invader","rank":4,"negative":false,"randomAllowed":false,"desc":"暗属性攻击伤害增加30%；龙属性攻击伤害增加30%"},{"id":"PAL_ALLAttack_up3","zh":"鬼神","en":"Demon God","rank":4,"negative":false,"randomAllowed":true,"desc":"攻击 +30%；防御 +5%"},{"id":"PAL_ALLAttack_up2","zh":"凶猛","en":"Ferocious","rank":3,"negative":false,"randomAllowed":true,"desc":"攻击 +20%"},{"id":"PAL_ALLAttack_up1","zh":"勇敢","en":"Brave","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +10%"},{"id":"PAL_ALLAttack_down1","zh":"胆小","en":"Coward","rank":-1,"negative":true,"randomAllowed":true,"desc":"攻击 -10%"},{"id":"PAL_ALLAttack_down2","zh":"消极主义者","en":"Pacifist","rank":-3,"negative":true,"randomAllowed":true,"desc":"攻击 -20%"},{"id":"PAL_rude","zh":"粗暴","en":"Hooligan","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +15%；工作速度 -10%"},{"id":"PAL_conceited","zh":"自恋狂","en":"Conceited","rank":1,"negative":false,"randomAllowed":true,"desc":"工作速度 +10%；防御 -10%"},{"id":"PAL_sadist","zh":"虐待狂","en":"Sadist","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +15%；防御 -15%"},{"id":"PAL_masochist","zh":"受虐狂","en":"Masochist","rank":1,"negative":false,"randomAllowed":true,"desc":"防御 +15%；攻击 -15%"},{"id":"PAL_CorporateSlave","zh":"社畜","en":"Work Slave","rank":1,"negative":false,"randomAllowed":true,"desc":"工作速度 +30%；攻击 -30%"},{"id":"PAL_oraora","zh":"强势","en":"Aggressive","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +10%；防御 -10%"},{"id":"TrainerATK_UP_1","zh":"突袭指挥官","en":"Vanguard","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的攻击提升10%"},{"id":"TrainerDEF_UP_1","zh":"铁壁军师","en":"Stronghold Strategist","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的防御提升10%"},{"id":"TrainerWorkSpeed_UP_1","zh":"啦啦队","en":"Motivational Leader","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的工作速度提升25%"},{"id":"TrainerMining_up1","zh":"矿山首领","en":"Mine Foreman","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的挖掘速度提升25%"},{"id":"TrainerLogging_up1","zh":"采伐领袖","en":"Logging Foreman","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的采伐速度提升25%"},{"id":"ElementResist_Normal_1_PAL","zh":"一反常态","en":"Abnormal","rank":1,"negative":false,"randomAllowed":true,"desc":"无属性伤害减少10%"},{"id":"ElementResist_Fire_1_PAL","zh":"拥抱烈日","en":"Suntan Lover","rank":1,"negative":false,"randomAllowed":true,"desc":"火属性伤害减少10%"},{"id":"ElementResist_Aqua_1_PAL","zh":"防水性能","en":"Waterproof","rank":1,"negative":false,"randomAllowed":true,"desc":"水属性伤害减少10%"},{"id":"ElementResist_Thunder_1_PAL","zh":"绝缘体","en":"Insulated Body","rank":1,"negative":false,"randomAllowed":true,"desc":"雷属性伤害减少10%"},{"id":"ElementResist_Leaf_1_PAL","zh":"除草效果","en":"Botanical Barrier","rank":1,"negative":false,"randomAllowed":true,"desc":"草属性伤害减少10%"},{"id":"ElementResist_Ice_1_PAL","zh":"高温体质","en":"Heated Body","rank":1,"negative":false,"randomAllowed":true,"desc":"冰属性伤害减少10%"},{"id":"ElementResist_Earth_1_PAL","zh":"抗震结构","en":"Earthquake Resistant","rank":1,"negative":false,"randomAllowed":true,"desc":"地属性伤害减少10%"},{"id":"ElementResist_Dark_1_PAL","zh":"阳光开朗","en":"Cheery","rank":1,"negative":false,"randomAllowed":true,"desc":"暗属性伤害减少10%"},{"id":"ElementResist_Dragon_1_PAL","zh":"屠龙者","en":"Dragonkiller","rank":1,"negative":false,"randomAllowed":true,"desc":"龙属性伤害减少10%"},{"id":"ElementBoost_Normal_1_PAL","zh":"禅境","en":"Spirit of Zen","rank":1,"negative":false,"randomAllowed":true,"desc":"无属性攻击伤害增加10%"},{"id":"ElementBoost_Fire_1_PAL","zh":"喜欢玩火","en":"Pyromaniac","rank":1,"negative":false,"randomAllowed":true,"desc":"火属性攻击伤害增加10%"},{"id":"ElementBoost_Aqua_1_PAL","zh":"喜欢戏水","en":"Hydromaniac","rank":1,"negative":false,"randomAllowed":true,"desc":"水属性攻击伤害增加10%"},{"id":"ElementBoost_Thunder_1_PAL","zh":"电容","en":"Capacitor","rank":1,"negative":false,"randomAllowed":true,"desc":"雷属性攻击伤害增加10%"},{"id":"ElementBoost_Leaf_1_PAL","zh":"草木馨香","en":"Fragrant Foliage","rank":1,"negative":false,"randomAllowed":true,"desc":"草属性攻击伤害增加10%"},{"id":"ElementBoost_Ice_1_PAL","zh":"冷血","en":"Coldblooded","rank":1,"negative":false,"randomAllowed":true,"desc":"冰属性攻击伤害增加10%"},{"id":"ElementBoost_Earth_1_PAL","zh":"大地之力","en":"Power of Gaia","rank":1,"negative":false,"randomAllowed":true,"desc":"地属性攻击伤害增加10%"},{"id":"ElementBoost_Dark_1_PAL","zh":"夜幕","en":"Veil of Darkness","rank":1,"negative":false,"randomAllowed":true,"desc":"暗属性攻击伤害增加10%"},{"id":"ElementBoost_Dragon_1_PAL","zh":"龙之血脉","en":"Blood of the Dragon","rank":1,"negative":false,"randomAllowed":true,"desc":"龙属性攻击伤害增加10%"},{"id":"PAL_FullStomach_Up_1","zh":"贪吃","en":"Glutton","rank":-1,"negative":true,"randomAllowed":true,"desc":"增加饱腹度下降速度+10.0%"},{"id":"PAL_FullStomach_Up_2","zh":"无底之胃","en":"Bottomless Stomach","rank":-2,"negative":true,"randomAllowed":true,"desc":"增加饱腹度下降速度+15.0%"},{"id":"PAL_FullStomach_Down_1","zh":"小胃","en":"Dainty Eater","rank":1,"negative":false,"randomAllowed":true,"desc":"减少饱腹度下降速度+10.0%"},{"id":"PAL_FullStomach_Down_2","zh":"节食大师","en":"Diet Lover","rank":3,"negative":false,"randomAllowed":true,"desc":"减少饱腹度下降速度+15.0%"},{"id":"PAL_FullStomach_Down_3","zh":"极限绝食","en":"Mastery of Fasting","rank":4,"negative":false,"randomAllowed":true,"desc":"减少饱腹度下降速度+20.0%"},{"id":"PAL_Sanity_Up_1","zh":"情绪不稳","en":"Unstable","rank":-1,"negative":true,"randomAllowed":true,"desc":"增加SAN值下降速度+10.0%"},{"id":"PAL_Sanity_Up_2","zh":"毁灭欲望","en":"Destructive","rank":-2,"negative":true,"randomAllowed":true,"desc":"增加SAN值下降速度+15.0%"},{"id":"PAL_Sanity_Down_1","zh":"积极思维","en":"Positive Thinker","rank":1,"negative":false,"randomAllowed":true,"desc":"减少SAN值下降速度+10.0%"},{"id":"PAL_Sanity_Down_2","zh":"工作狂","en":"Workaholic","rank":3,"negative":false,"randomAllowed":true,"desc":"减少SAN值下降速度+15.0%"},{"id":"PAL_Sanity_Down_3","zh":"明镜止水","en":"Heart of the Immovable King","rank":4,"negative":false,"randomAllowed":true,"desc":"减少SAN值下降速度+20.0%"},{"id":"ElementBoost_Normal_2_PAL","zh":"圣天","en":"Celestial Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"无属性攻击伤害增加30%"},{"id":"ElementBoost_Fire_2_PAL","zh":"炎帝","en":"Flame Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"火属性攻击伤害增加30%"},{"id":"ElementBoost_Aqua_2_PAL","zh":"海皇","en":"Lord of the Sea","rank":3,"negative":false,"randomAllowed":false,"desc":"水属性攻击伤害增加30%"},{"id":"ElementBoost_Thunder_2_PAL","zh":"雷帝","en":"Lord of Lightning","rank":3,"negative":false,"randomAllowed":false,"desc":"雷属性攻击伤害增加30%"},{"id":"ElementBoost_Leaf_2_PAL","zh":"精灵王","en":"Spirit Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"草属性攻击伤害增加30%"},{"id":"ElementBoost_Ice_2_PAL","zh":"冰帝","en":"Ice Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"冰属性攻击伤害增加30%"},{"id":"ElementBoost_Earth_2_PAL","zh":"岩帝","en":"Earth Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"地属性攻击伤害增加30%"},{"id":"ElementBoost_Dark_2_PAL","zh":"冥王","en":"Lord of the Underworld","rank":3,"negative":false,"randomAllowed":false,"desc":"暗属性攻击伤害增加30%"},{"id":"ElementBoost_Dragon_2_PAL","zh":"神龙","en":"Divine Dragon","rank":3,"negative":false,"randomAllowed":false,"desc":"龙属性攻击伤害增加30%"},{"id":"MoveSpeed_up_1","zh":"灵活","en":"Nimble","rank":1,"negative":false,"randomAllowed":true,"desc":"移动速度提升10%"},{"id":"MoveSpeed_up_2","zh":"运动健将","en":"Runner","rank":3,"negative":false,"randomAllowed":true,"desc":"移动速度提升20%"},{"id":"MoveSpeed_up_3","zh":"神速","en":"Swift","rank":4,"negative":false,"randomAllowed":true,"desc":"移动速度提升30%"},{"id":"NonKilling","zh":"手下留情","en":"Mercy Hit","rank":-1,"negative":true,"randomAllowed":true,"desc":"和平主义者。；使攻击目标的生命值不会小于1。"},{"id":"Nocturnal","zh":"不眠","en":"Insomnia","rank":1,"negative":false,"randomAllowed":true,"desc":"即使到夜晚也不会睡觉，会一直工作。"},{"id":"Test_PalEgg_HatchingSpeed_Up","zh":"博爱主义者","en":"Philanthropist","rank":3,"negative":false,"randomAllowed":true,"desc":"当分配到配种牧场时，产出蛋的速度将加快100%。"},{"id":"CoolTimeReduction_Up_1","zh":"沉着冷静","en":"Serenity","rank":3,"negative":false,"randomAllowed":true,"desc":"主动技能的冷却时间缩短30%；攻击+10%"},{"id":"CoolTimeReduction_Up_2","zh":"急性子","en":"Impatient","rank":1,"negative":false,"randomAllowed":true,"desc":"主动技能的冷却时间缩短15%"},{"id":"CoolTimeReduction_Down_1","zh":"慢性子","en":"Easygoing","rank":-1,"negative":true,"randomAllowed":true,"desc":"主动技能的冷却时间延长-15%"},{"id":"Stamina_Up_1","zh":"无限精力","en":"Infinite Stamina","rank":3,"negative":false,"randomAllowed":true,"desc":"最大耐力+50%；※此效果仅对可骑乘的帕鲁有效。"},{"id":"Stamina_Up_2","zh":"健康宝宝","en":"Fit as a Fiddle","rank":1,"negative":false,"randomAllowed":true,"desc":"最大耐力+25%；※此效果仅对可骑乘的帕鲁有效。"},{"id":"Stamina_Up_3","zh":"永动机","en":"Eternal Engine","rank":4,"negative":false,"randomAllowed":true,"desc":"最大耐力+75%；※此效果仅对可骑乘的帕鲁有效。"},{"id":"Stamina_Down_1","zh":"家里蹲","en":"Sickly","rank":-1,"negative":true,"randomAllowed":true,"desc":"最大耐力-25%；※此效果仅对可骑乘的帕鲁有效。"},{"id":"SalePrice_Up_1","zh":"高贵","en":"Noble","rank":3,"negative":false,"randomAllowed":true,"desc":"改善交易价格+5%"},{"id":"SalePrice_Up_2","zh":"贵族","en":"Fine Furs","rank":1,"negative":false,"randomAllowed":true,"desc":"改善交易价格+3%"},{"id":"SalePrice_Down_1","zh":"寒酸","en":"Shabby","rank":-1,"negative":true,"randomAllowed":true,"desc":"交易价格恶化-10%"},{"id":"Alien","zh":"未知生物细胞","en":"Otherworldly Cells","rank":1,"negative":false,"randomAllowed":false,"desc":"攻击力+10%；火属性伤害减免15%；雷属性伤害减免15%"},{"id":"Vampire","zh":"吸血鬼","en":"Vampiric","rank":4,"negative":false,"randomAllowed":true,"desc":"会吸收造成伤害的一部分恢复自身的HP。；即使到夜晚也不会睡觉，可以一直工作。"},{"id":"Nushi","zh":"湖之主","en":"Lunker","rank":4,"negative":false,"randomAllowed":false,"desc":"水属性攻击伤害增加20%；冰属性攻击伤害增加20%；防御+20%"},{"id":"SwimSpeed_up_1","zh":"悠然泳姿","en":"Sleek Stroke","rank":1,"negative":false,"randomAllowed":true,"desc":"水上移动速度提升30%"},{"id":"SwimSpeed_up_2","zh":"游泳健将","en":"Ace Swimmer","rank":3,"negative":false,"randomAllowed":true,"desc":"水上移动速度提升40%"},{"id":"SwimSpeed_up_3","zh":"破浪王者","en":"King of the Waves","rank":4,"negative":false,"randomAllowed":true,"desc":"水上移动速度提升50%"},{"id":"Salvation","zh":"救世主","en":"Savior","rank":4,"negative":false,"randomAllowed":false,"desc":"无属性攻击伤害增加30%；草属性攻击伤害增加30%"},{"id":"WorldTree_ATK","zh":"双刃圣剑","en":"Twin-Edged Holy Blade","rank":5,"negative":false,"randomAllowed":false,"desc":"攻击+50%；防御-30%；世界树区域的树木/矿石不会因接近而消失"},{"id":"WorldTree_DEF","zh":"守护圣盾","en":"Sanctified Meat Shield","rank":5,"negative":false,"randomAllowed":false,"desc":"防御+50%；攻击-30%；世界树区域的树木/矿石不会因接近而消失"},{"id":"WorldTree_CraftSpeed","zh":"恶魔之手","en":"Demon’s Hand","rank":5,"negative":false,"randomAllowed":false,"desc":"工作速度+90%；SAN值下降速度加快+15.0%；世界树区域的树木/矿石不会因接近而消失"},{"id":"WorldTree_FullStomach","zh":"神树苗床","en":"World Tree Seedbed","rank":5,"negative":false,"randomAllowed":false,"desc":"减少饱腹度下降速度+50.0%；生命值-20%；世界树区域的树木/矿石不会因接近而消失"},{"id":"WorldTree_Sanity","zh":"仙人","en":"Hermit Sage","rank":5,"negative":false,"randomAllowed":false,"desc":"减少SAN值下降速度+50.0%；工作速度-20%；世界树区域的树木/矿石不会因接近而消失"},{"id":"WorldTree_MoveSpeed","zh":"次元跳跃","en":"Dimensional Leap","rank":5,"negative":false,"randomAllowed":false,"desc":"移动速度提升+50%；饱腹度下降速度加快+15.0%；世界树区域的树木/矿石不会因接近而消失"},{"id":"WorldTree_ATK_DEF","zh":"破坏神","en":"God of Destruction","rank":5,"negative":false,"randomAllowed":false,"desc":"攻击+40%；防御+20%；最大HP-50%；世界树区域的树木/矿石不会因接近而消失"},{"id":"MiniNushi","zh":"大猎物","en":"Whopper","rank":3,"negative":false,"randomAllowed":false,"desc":"水属性攻击伤害增加5%；冰属性攻击伤害增加5%；防御+5%"},{"id":"Deffence_up2_2","zh":"重量级","en":"Heavyweight","rank":2,"negative":false,"randomAllowed":true,"desc":"防御力+20%；免疫击退"},{"id":"MutationPal_Babysitter","zh":"育婴师","en":"Babysitter","rank":4,"negative":false,"randomAllowed":false,"desc":"在据点内时，分派到配种牧场的帕鲁的；产蛋速度+30%，孵化速度+30%"},{"id":"MutationPal_Mutant","zh":"特殊体质","en":"Idiosyncratic","rank":4,"negative":false,"randomAllowed":false,"desc":"帕鲁和玩家的生命值自然恢复量+50%；防御力+25%；免疫中毒伤害；免疫灼烧伤害"},{"id":"NightOwl","zh":"夜猫子","en":"Night Owl","rank":-1,"negative":true,"randomAllowed":true,"desc":"因为总是熬夜，白天常常睡午觉。"},{"id":"SelfDeathAddItemDrop_up_2","zh":"奉献精神","en":"Service-Minded","rank":3,"negative":false,"randomAllowed":true,"desc":"自身道具掉落量+50%"},{"id":"SelfDeathAddItemDrop_up_3","zh":"慷慨就义","en":"Lavish Hospitality","rank":4,"negative":false,"randomAllowed":true,"desc":"自身道具掉落量+100%"},{"id":"WorkSuitabilityAddRank_MonsterFarm_1","zh":"牧场之子","en":"Farmhand","rank":3,"negative":false,"randomAllowed":true,"desc":"牧场的工作适应性+1"},{"id":"WorkSuitabilityAddRank_MonsterFarm_2","zh":"牧场之主","en":"Ranch Master","rank":4,"negative":false,"randomAllowed":true,"desc":"牧场的工作适应性+2"},{"id":"MutationPal_Immortal","zh":"不死之身","en":"Immortality","rank":4,"negative":false,"randomAllowed":false,"desc":"窃取生命+5%；帕鲁生命值自然恢复量+100%；攻击力+15%"},{"id":"MutationPal_ExplosionResist","zh":"重装甲","en":"Heavily Armored","rank":4,"negative":false,"randomAllowed":false,"desc":"免疫爆破伤害"},{"id":"RideJumpCount_Increase1","zh":"身轻如燕","en":"Lightfooted","rank":4,"negative":false,"randomAllowed":true,"desc":"骑乘期间连续跳跃次数+1"},{"id":"RideJumpCount_Increase2","zh":"凌空微步","en":"Skymarcher","rank":4,"negative":false,"randomAllowed":false,"desc":"骑乘期间连续跳跃次数+2"},{"id":"PlayerSP_DecreaseRate_Passive","zh":"防过劳帮手","en":"Wellness Watcher","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的耐力消耗量减缓+5.0%"},{"id":"AutoHPRegeneRate_Passive","zh":"疗愈教练","en":"Healing Coach","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的生命值自然恢复量+5%"},{"id":"ReloadSpeedUp_Passive","zh":"装填大师","en":"Reload Master","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的装填速度提升+4%"}],"PASSIVE_BY_ID":{"CraftSpeed_up3":{"id":"CraftSpeed_up3","zh":"卓绝技艺","en":"Remarkable Craftsmanship","rank":4,"negative":false,"randomAllowed":true,"desc":"工作速度 +75%"},"CraftSpeed_up2":{"id":"CraftSpeed_up2","zh":"工匠精神","en":"Artisan","rank":3,"negative":false,"randomAllowed":true,"desc":"工作速度 +50%"},"CraftSpeed_up1":{"id":"CraftSpeed_up1","zh":"认真","en":"Serious","rank":1,"negative":false,"randomAllowed":true,"desc":"工作速度 +20%"},"CraftSpeed_down1":{"id":"CraftSpeed_down1","zh":"笨手笨脚","en":"Clumsy","rank":-1,"negative":true,"randomAllowed":true,"desc":"工作速度 -10%"},"CraftSpeed_down2":{"id":"CraftSpeed_down2","zh":"偷懒成瘾","en":"Slacker","rank":-3,"negative":true,"randomAllowed":true,"desc":"工作速度 -30%"},"Deffence_up3":{"id":"Deffence_up3","zh":"金刚之躯","en":"Diamond Body","rank":4,"negative":false,"randomAllowed":true,"desc":"防御力+30%；免疫硬直；免疫击退"},"Deffence_up2":{"id":"Deffence_up2","zh":"顽强肉体","en":"Burly Body","rank":3,"negative":false,"randomAllowed":true,"desc":"防御力+20%；免疫硬直"},"Deffence_up1":{"id":"Deffence_up1","zh":"坚硬皮肤","en":"Hard Skin","rank":1,"negative":false,"randomAllowed":true,"desc":"防御 +10%"},"Deffence_down1":{"id":"Deffence_down1","zh":"弱不禁风","en":"Downtrodden","rank":-1,"negative":true,"randomAllowed":true,"desc":"防御 -10%"},"Deffence_down2":{"id":"Deffence_down2","zh":"骨质疏松","en":"Brittle","rank":-3,"negative":true,"randomAllowed":true,"desc":"防御 -20%"},"Noukin":{"id":"Noukin","zh":"脑筋","en":"Musclehead","rank":2,"negative":false,"randomAllowed":true,"desc":"攻击 +30%；工作速度 -50%"},"Rare":{"id":"Rare","zh":"稀有","en":"Lucky","rank":4,"negative":false,"randomAllowed":false,"desc":"攻击 +15%；防御 +15%；工作速度 +20%"},"Legend":{"id":"Legend","zh":"传说","en":"Legend","rank":4,"negative":false,"randomAllowed":false,"desc":"攻击+20%；防御+20%；移动速度提升20%"},"Witch":{"id":"Witch","zh":"魔女","en":"Siren of the Void","rank":4,"negative":false,"randomAllowed":false,"desc":"暗属性攻击伤害增加30%；冰属性攻击伤害增加30%"},"EternalFlame":{"id":"EternalFlame","zh":"永炎","en":"Eternal Flame","rank":4,"negative":false,"randomAllowed":false,"desc":"火属性攻击伤害增加30%；雷属性攻击伤害增加30%"},"Invader":{"id":"Invader","zh":"侵略者","en":"Invader","rank":4,"negative":false,"randomAllowed":false,"desc":"暗属性攻击伤害增加30%；龙属性攻击伤害增加30%"},"PAL_ALLAttack_up3":{"id":"PAL_ALLAttack_up3","zh":"鬼神","en":"Demon God","rank":4,"negative":false,"randomAllowed":true,"desc":"攻击 +30%；防御 +5%"},"PAL_ALLAttack_up2":{"id":"PAL_ALLAttack_up2","zh":"凶猛","en":"Ferocious","rank":3,"negative":false,"randomAllowed":true,"desc":"攻击 +20%"},"PAL_ALLAttack_up1":{"id":"PAL_ALLAttack_up1","zh":"勇敢","en":"Brave","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +10%"},"PAL_ALLAttack_down1":{"id":"PAL_ALLAttack_down1","zh":"胆小","en":"Coward","rank":-1,"negative":true,"randomAllowed":true,"desc":"攻击 -10%"},"PAL_ALLAttack_down2":{"id":"PAL_ALLAttack_down2","zh":"消极主义者","en":"Pacifist","rank":-3,"negative":true,"randomAllowed":true,"desc":"攻击 -20%"},"PAL_rude":{"id":"PAL_rude","zh":"粗暴","en":"Hooligan","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +15%；工作速度 -10%"},"PAL_conceited":{"id":"PAL_conceited","zh":"自恋狂","en":"Conceited","rank":1,"negative":false,"randomAllowed":true,"desc":"工作速度 +10%；防御 -10%"},"PAL_sadist":{"id":"PAL_sadist","zh":"虐待狂","en":"Sadist","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +15%；防御 -15%"},"PAL_masochist":{"id":"PAL_masochist","zh":"受虐狂","en":"Masochist","rank":1,"negative":false,"randomAllowed":true,"desc":"防御 +15%；攻击 -15%"},"PAL_CorporateSlave":{"id":"PAL_CorporateSlave","zh":"社畜","en":"Work Slave","rank":1,"negative":false,"randomAllowed":true,"desc":"工作速度 +30%；攻击 -30%"},"PAL_oraora":{"id":"PAL_oraora","zh":"强势","en":"Aggressive","rank":1,"negative":false,"randomAllowed":true,"desc":"攻击 +10%；防御 -10%"},"TrainerATK_UP_1":{"id":"TrainerATK_UP_1","zh":"突袭指挥官","en":"Vanguard","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的攻击提升10%"},"TrainerDEF_UP_1":{"id":"TrainerDEF_UP_1","zh":"铁壁军师","en":"Stronghold Strategist","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的防御提升10%"},"TrainerWorkSpeed_UP_1":{"id":"TrainerWorkSpeed_UP_1","zh":"啦啦队","en":"Motivational Leader","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的工作速度提升25%"},"TrainerMining_up1":{"id":"TrainerMining_up1","zh":"矿山首领","en":"Mine Foreman","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的挖掘速度提升25%"},"TrainerLogging_up1":{"id":"TrainerLogging_up1","zh":"采伐领袖","en":"Logging Foreman","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的采伐速度提升25%"},"ElementResist_Normal_1_PAL":{"id":"ElementResist_Normal_1_PAL","zh":"一反常态","en":"Abnormal","rank":1,"negative":false,"randomAllowed":true,"desc":"无属性伤害减少10%"},"ElementResist_Fire_1_PAL":{"id":"ElementResist_Fire_1_PAL","zh":"拥抱烈日","en":"Suntan Lover","rank":1,"negative":false,"randomAllowed":true,"desc":"火属性伤害减少10%"},"ElementResist_Aqua_1_PAL":{"id":"ElementResist_Aqua_1_PAL","zh":"防水性能","en":"Waterproof","rank":1,"negative":false,"randomAllowed":true,"desc":"水属性伤害减少10%"},"ElementResist_Thunder_1_PAL":{"id":"ElementResist_Thunder_1_PAL","zh":"绝缘体","en":"Insulated Body","rank":1,"negative":false,"randomAllowed":true,"desc":"雷属性伤害减少10%"},"ElementResist_Leaf_1_PAL":{"id":"ElementResist_Leaf_1_PAL","zh":"除草效果","en":"Botanical Barrier","rank":1,"negative":false,"randomAllowed":true,"desc":"草属性伤害减少10%"},"ElementResist_Ice_1_PAL":{"id":"ElementResist_Ice_1_PAL","zh":"高温体质","en":"Heated Body","rank":1,"negative":false,"randomAllowed":true,"desc":"冰属性伤害减少10%"},"ElementResist_Earth_1_PAL":{"id":"ElementResist_Earth_1_PAL","zh":"抗震结构","en":"Earthquake Resistant","rank":1,"negative":false,"randomAllowed":true,"desc":"地属性伤害减少10%"},"ElementResist_Dark_1_PAL":{"id":"ElementResist_Dark_1_PAL","zh":"阳光开朗","en":"Cheery","rank":1,"negative":false,"randomAllowed":true,"desc":"暗属性伤害减少10%"},"ElementResist_Dragon_1_PAL":{"id":"ElementResist_Dragon_1_PAL","zh":"屠龙者","en":"Dragonkiller","rank":1,"negative":false,"randomAllowed":true,"desc":"龙属性伤害减少10%"},"ElementBoost_Normal_1_PAL":{"id":"ElementBoost_Normal_1_PAL","zh":"禅境","en":"Spirit of Zen","rank":1,"negative":false,"randomAllowed":true,"desc":"无属性攻击伤害增加10%"},"ElementBoost_Fire_1_PAL":{"id":"ElementBoost_Fire_1_PAL","zh":"喜欢玩火","en":"Pyromaniac","rank":1,"negative":false,"randomAllowed":true,"desc":"火属性攻击伤害增加10%"},"ElementBoost_Aqua_1_PAL":{"id":"ElementBoost_Aqua_1_PAL","zh":"喜欢戏水","en":"Hydromaniac","rank":1,"negative":false,"randomAllowed":true,"desc":"水属性攻击伤害增加10%"},"ElementBoost_Thunder_1_PAL":{"id":"ElementBoost_Thunder_1_PAL","zh":"电容","en":"Capacitor","rank":1,"negative":false,"randomAllowed":true,"desc":"雷属性攻击伤害增加10%"},"ElementBoost_Leaf_1_PAL":{"id":"ElementBoost_Leaf_1_PAL","zh":"草木馨香","en":"Fragrant Foliage","rank":1,"negative":false,"randomAllowed":true,"desc":"草属性攻击伤害增加10%"},"ElementBoost_Ice_1_PAL":{"id":"ElementBoost_Ice_1_PAL","zh":"冷血","en":"Coldblooded","rank":1,"negative":false,"randomAllowed":true,"desc":"冰属性攻击伤害增加10%"},"ElementBoost_Earth_1_PAL":{"id":"ElementBoost_Earth_1_PAL","zh":"大地之力","en":"Power of Gaia","rank":1,"negative":false,"randomAllowed":true,"desc":"地属性攻击伤害增加10%"},"ElementBoost_Dark_1_PAL":{"id":"ElementBoost_Dark_1_PAL","zh":"夜幕","en":"Veil of Darkness","rank":1,"negative":false,"randomAllowed":true,"desc":"暗属性攻击伤害增加10%"},"ElementBoost_Dragon_1_PAL":{"id":"ElementBoost_Dragon_1_PAL","zh":"龙之血脉","en":"Blood of the Dragon","rank":1,"negative":false,"randomAllowed":true,"desc":"龙属性攻击伤害增加10%"},"PAL_FullStomach_Up_1":{"id":"PAL_FullStomach_Up_1","zh":"贪吃","en":"Glutton","rank":-1,"negative":true,"randomAllowed":true,"desc":"增加饱腹度下降速度+10.0%"},"PAL_FullStomach_Up_2":{"id":"PAL_FullStomach_Up_2","zh":"无底之胃","en":"Bottomless Stomach","rank":-2,"negative":true,"randomAllowed":true,"desc":"增加饱腹度下降速度+15.0%"},"PAL_FullStomach_Down_1":{"id":"PAL_FullStomach_Down_1","zh":"小胃","en":"Dainty Eater","rank":1,"negative":false,"randomAllowed":true,"desc":"减少饱腹度下降速度+10.0%"},"PAL_FullStomach_Down_2":{"id":"PAL_FullStomach_Down_2","zh":"节食大师","en":"Diet Lover","rank":3,"negative":false,"randomAllowed":true,"desc":"减少饱腹度下降速度+15.0%"},"PAL_FullStomach_Down_3":{"id":"PAL_FullStomach_Down_3","zh":"极限绝食","en":"Mastery of Fasting","rank":4,"negative":false,"randomAllowed":true,"desc":"减少饱腹度下降速度+20.0%"},"PAL_Sanity_Up_1":{"id":"PAL_Sanity_Up_1","zh":"情绪不稳","en":"Unstable","rank":-1,"negative":true,"randomAllowed":true,"desc":"增加SAN值下降速度+10.0%"},"PAL_Sanity_Up_2":{"id":"PAL_Sanity_Up_2","zh":"毁灭欲望","en":"Destructive","rank":-2,"negative":true,"randomAllowed":true,"desc":"增加SAN值下降速度+15.0%"},"PAL_Sanity_Down_1":{"id":"PAL_Sanity_Down_1","zh":"积极思维","en":"Positive Thinker","rank":1,"negative":false,"randomAllowed":true,"desc":"减少SAN值下降速度+10.0%"},"PAL_Sanity_Down_2":{"id":"PAL_Sanity_Down_2","zh":"工作狂","en":"Workaholic","rank":3,"negative":false,"randomAllowed":true,"desc":"减少SAN值下降速度+15.0%"},"PAL_Sanity_Down_3":{"id":"PAL_Sanity_Down_3","zh":"明镜止水","en":"Heart of the Immovable King","rank":4,"negative":false,"randomAllowed":true,"desc":"减少SAN值下降速度+20.0%"},"ElementBoost_Normal_2_PAL":{"id":"ElementBoost_Normal_2_PAL","zh":"圣天","en":"Celestial Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"无属性攻击伤害增加30%"},"ElementBoost_Fire_2_PAL":{"id":"ElementBoost_Fire_2_PAL","zh":"炎帝","en":"Flame Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"火属性攻击伤害增加30%"},"ElementBoost_Aqua_2_PAL":{"id":"ElementBoost_Aqua_2_PAL","zh":"海皇","en":"Lord of the Sea","rank":3,"negative":false,"randomAllowed":false,"desc":"水属性攻击伤害增加30%"},"ElementBoost_Thunder_2_PAL":{"id":"ElementBoost_Thunder_2_PAL","zh":"雷帝","en":"Lord of Lightning","rank":3,"negative":false,"randomAllowed":false,"desc":"雷属性攻击伤害增加30%"},"ElementBoost_Leaf_2_PAL":{"id":"ElementBoost_Leaf_2_PAL","zh":"精灵王","en":"Spirit Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"草属性攻击伤害增加30%"},"ElementBoost_Ice_2_PAL":{"id":"ElementBoost_Ice_2_PAL","zh":"冰帝","en":"Ice Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"冰属性攻击伤害增加30%"},"ElementBoost_Earth_2_PAL":{"id":"ElementBoost_Earth_2_PAL","zh":"岩帝","en":"Earth Emperor","rank":3,"negative":false,"randomAllowed":false,"desc":"地属性攻击伤害增加30%"},"ElementBoost_Dark_2_PAL":{"id":"ElementBoost_Dark_2_PAL","zh":"冥王","en":"Lord of the Underworld","rank":3,"negative":false,"randomAllowed":false,"desc":"暗属性攻击伤害增加30%"},"ElementBoost_Dragon_2_PAL":{"id":"ElementBoost_Dragon_2_PAL","zh":"神龙","en":"Divine Dragon","rank":3,"negative":false,"randomAllowed":false,"desc":"龙属性攻击伤害增加30%"},"MoveSpeed_up_1":{"id":"MoveSpeed_up_1","zh":"灵活","en":"Nimble","rank":1,"negative":false,"randomAllowed":true,"desc":"移动速度提升10%"},"MoveSpeed_up_2":{"id":"MoveSpeed_up_2","zh":"运动健将","en":"Runner","rank":3,"negative":false,"randomAllowed":true,"desc":"移动速度提升20%"},"MoveSpeed_up_3":{"id":"MoveSpeed_up_3","zh":"神速","en":"Swift","rank":4,"negative":false,"randomAllowed":true,"desc":"移动速度提升30%"},"NonKilling":{"id":"NonKilling","zh":"手下留情","en":"Mercy Hit","rank":-1,"negative":true,"randomAllowed":true,"desc":"和平主义者。；使攻击目标的生命值不会小于1。"},"Nocturnal":{"id":"Nocturnal","zh":"不眠","en":"Insomnia","rank":1,"negative":false,"randomAllowed":true,"desc":"即使到夜晚也不会睡觉，会一直工作。"},"Test_PalEgg_HatchingSpeed_Up":{"id":"Test_PalEgg_HatchingSpeed_Up","zh":"博爱主义者","en":"Philanthropist","rank":3,"negative":false,"randomAllowed":true,"desc":"当分配到配种牧场时，产出蛋的速度将加快100%。"},"CoolTimeReduction_Up_1":{"id":"CoolTimeReduction_Up_1","zh":"沉着冷静","en":"Serenity","rank":3,"negative":false,"randomAllowed":true,"desc":"主动技能的冷却时间缩短30%；攻击+10%"},"CoolTimeReduction_Up_2":{"id":"CoolTimeReduction_Up_2","zh":"急性子","en":"Impatient","rank":1,"negative":false,"randomAllowed":true,"desc":"主动技能的冷却时间缩短15%"},"CoolTimeReduction_Down_1":{"id":"CoolTimeReduction_Down_1","zh":"慢性子","en":"Easygoing","rank":-1,"negative":true,"randomAllowed":true,"desc":"主动技能的冷却时间延长-15%"},"Stamina_Up_1":{"id":"Stamina_Up_1","zh":"无限精力","en":"Infinite Stamina","rank":3,"negative":false,"randomAllowed":true,"desc":"最大耐力+50%；※此效果仅对可骑乘的帕鲁有效。"},"Stamina_Up_2":{"id":"Stamina_Up_2","zh":"健康宝宝","en":"Fit as a Fiddle","rank":1,"negative":false,"randomAllowed":true,"desc":"最大耐力+25%；※此效果仅对可骑乘的帕鲁有效。"},"Stamina_Up_3":{"id":"Stamina_Up_3","zh":"永动机","en":"Eternal Engine","rank":4,"negative":false,"randomAllowed":true,"desc":"最大耐力+75%；※此效果仅对可骑乘的帕鲁有效。"},"Stamina_Down_1":{"id":"Stamina_Down_1","zh":"家里蹲","en":"Sickly","rank":-1,"negative":true,"randomAllowed":true,"desc":"最大耐力-25%；※此效果仅对可骑乘的帕鲁有效。"},"SalePrice_Up_1":{"id":"SalePrice_Up_1","zh":"高贵","en":"Noble","rank":3,"negative":false,"randomAllowed":true,"desc":"改善交易价格+5%"},"SalePrice_Up_2":{"id":"SalePrice_Up_2","zh":"贵族","en":"Fine Furs","rank":1,"negative":false,"randomAllowed":true,"desc":"改善交易价格+3%"},"SalePrice_Down_1":{"id":"SalePrice_Down_1","zh":"寒酸","en":"Shabby","rank":-1,"negative":true,"randomAllowed":true,"desc":"交易价格恶化-10%"},"Alien":{"id":"Alien","zh":"未知生物细胞","en":"Otherworldly Cells","rank":1,"negative":false,"randomAllowed":false,"desc":"攻击力+10%；火属性伤害减免15%；雷属性伤害减免15%"},"Vampire":{"id":"Vampire","zh":"吸血鬼","en":"Vampiric","rank":4,"negative":false,"randomAllowed":true,"desc":"会吸收造成伤害的一部分恢复自身的HP。；即使到夜晚也不会睡觉，可以一直工作。"},"Nushi":{"id":"Nushi","zh":"湖之主","en":"Lunker","rank":4,"negative":false,"randomAllowed":false,"desc":"水属性攻击伤害增加20%；冰属性攻击伤害增加20%；防御+20%"},"SwimSpeed_up_1":{"id":"SwimSpeed_up_1","zh":"悠然泳姿","en":"Sleek Stroke","rank":1,"negative":false,"randomAllowed":true,"desc":"水上移动速度提升30%"},"SwimSpeed_up_2":{"id":"SwimSpeed_up_2","zh":"游泳健将","en":"Ace Swimmer","rank":3,"negative":false,"randomAllowed":true,"desc":"水上移动速度提升40%"},"SwimSpeed_up_3":{"id":"SwimSpeed_up_3","zh":"破浪王者","en":"King of the Waves","rank":4,"negative":false,"randomAllowed":true,"desc":"水上移动速度提升50%"},"Salvation":{"id":"Salvation","zh":"救世主","en":"Savior","rank":4,"negative":false,"randomAllowed":false,"desc":"无属性攻击伤害增加30%；草属性攻击伤害增加30%"},"WorldTree_ATK":{"id":"WorldTree_ATK","zh":"双刃圣剑","en":"Twin-Edged Holy Blade","rank":5,"negative":false,"randomAllowed":false,"desc":"攻击+50%；防御-30%；世界树区域的树木/矿石不会因接近而消失"},"WorldTree_DEF":{"id":"WorldTree_DEF","zh":"守护圣盾","en":"Sanctified Meat Shield","rank":5,"negative":false,"randomAllowed":false,"desc":"防御+50%；攻击-30%；世界树区域的树木/矿石不会因接近而消失"},"WorldTree_CraftSpeed":{"id":"WorldTree_CraftSpeed","zh":"恶魔之手","en":"Demon’s Hand","rank":5,"negative":false,"randomAllowed":false,"desc":"工作速度+90%；SAN值下降速度加快+15.0%；世界树区域的树木/矿石不会因接近而消失"},"WorldTree_FullStomach":{"id":"WorldTree_FullStomach","zh":"神树苗床","en":"World Tree Seedbed","rank":5,"negative":false,"randomAllowed":false,"desc":"减少饱腹度下降速度+50.0%；生命值-20%；世界树区域的树木/矿石不会因接近而消失"},"WorldTree_Sanity":{"id":"WorldTree_Sanity","zh":"仙人","en":"Hermit Sage","rank":5,"negative":false,"randomAllowed":false,"desc":"减少SAN值下降速度+50.0%；工作速度-20%；世界树区域的树木/矿石不会因接近而消失"},"WorldTree_MoveSpeed":{"id":"WorldTree_MoveSpeed","zh":"次元跳跃","en":"Dimensional Leap","rank":5,"negative":false,"randomAllowed":false,"desc":"移动速度提升+50%；饱腹度下降速度加快+15.0%；世界树区域的树木/矿石不会因接近而消失"},"WorldTree_ATK_DEF":{"id":"WorldTree_ATK_DEF","zh":"破坏神","en":"God of Destruction","rank":5,"negative":false,"randomAllowed":false,"desc":"攻击+40%；防御+20%；最大HP-50%；世界树区域的树木/矿石不会因接近而消失"},"MiniNushi":{"id":"MiniNushi","zh":"大猎物","en":"Whopper","rank":3,"negative":false,"randomAllowed":false,"desc":"水属性攻击伤害增加5%；冰属性攻击伤害增加5%；防御+5%"},"Deffence_up2_2":{"id":"Deffence_up2_2","zh":"重量级","en":"Heavyweight","rank":2,"negative":false,"randomAllowed":true,"desc":"防御力+20%；免疫击退"},"MutationPal_Babysitter":{"id":"MutationPal_Babysitter","zh":"育婴师","en":"Babysitter","rank":4,"negative":false,"randomAllowed":false,"desc":"在据点内时，分派到配种牧场的帕鲁的；产蛋速度+30%，孵化速度+30%"},"MutationPal_Mutant":{"id":"MutationPal_Mutant","zh":"特殊体质","en":"Idiosyncratic","rank":4,"negative":false,"randomAllowed":false,"desc":"帕鲁和玩家的生命值自然恢复量+50%；防御力+25%；免疫中毒伤害；免疫灼烧伤害"},"NightOwl":{"id":"NightOwl","zh":"夜猫子","en":"Night Owl","rank":-1,"negative":true,"randomAllowed":true,"desc":"因为总是熬夜，白天常常睡午觉。"},"SelfDeathAddItemDrop_up_2":{"id":"SelfDeathAddItemDrop_up_2","zh":"奉献精神","en":"Service-Minded","rank":3,"negative":false,"randomAllowed":true,"desc":"自身道具掉落量+50%"},"SelfDeathAddItemDrop_up_3":{"id":"SelfDeathAddItemDrop_up_3","zh":"慷慨就义","en":"Lavish Hospitality","rank":4,"negative":false,"randomAllowed":true,"desc":"自身道具掉落量+100%"},"WorkSuitabilityAddRank_MonsterFarm_1":{"id":"WorkSuitabilityAddRank_MonsterFarm_1","zh":"牧场之子","en":"Farmhand","rank":3,"negative":false,"randomAllowed":true,"desc":"牧场的工作适应性+1"},"WorkSuitabilityAddRank_MonsterFarm_2":{"id":"WorkSuitabilityAddRank_MonsterFarm_2","zh":"牧场之主","en":"Ranch Master","rank":4,"negative":false,"randomAllowed":true,"desc":"牧场的工作适应性+2"},"MutationPal_Immortal":{"id":"MutationPal_Immortal","zh":"不死之身","en":"Immortality","rank":4,"negative":false,"randomAllowed":false,"desc":"窃取生命+5%；帕鲁生命值自然恢复量+100%；攻击力+15%"},"MutationPal_ExplosionResist":{"id":"MutationPal_ExplosionResist","zh":"重装甲","en":"Heavily Armored","rank":4,"negative":false,"randomAllowed":false,"desc":"免疫爆破伤害"},"RideJumpCount_Increase1":{"id":"RideJumpCount_Increase1","zh":"身轻如燕","en":"Lightfooted","rank":4,"negative":false,"randomAllowed":true,"desc":"骑乘期间连续跳跃次数+1"},"RideJumpCount_Increase2":{"id":"RideJumpCount_Increase2","zh":"凌空微步","en":"Skymarcher","rank":4,"negative":false,"randomAllowed":false,"desc":"骑乘期间连续跳跃次数+2"},"PlayerSP_DecreaseRate_Passive":{"id":"PlayerSP_DecreaseRate_Passive","zh":"防过劳帮手","en":"Wellness Watcher","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的耐力消耗量减缓+5.0%"},"AutoHPRegeneRate_Passive":{"id":"AutoHPRegeneRate_Passive","zh":"疗愈教练","en":"Healing Coach","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的生命值自然恢复量+5%"},"ReloadSpeedUp_Passive":{"id":"ReloadSpeedUp_Passive","zh":"装填大师","en":"Reload Master","rank":3,"negative":false,"randomAllowed":true,"desc":"玩家的装填速度提升+4%"},"Rare_PAL":{"id":"Legend","zh":"传说","en":"Legend","rank":4,"negative":false,"randomAllowed":false,"desc":"攻击+20%；防御+20%；移动速度提升20%"}},"GUARANTEED":{"ElementBoost_Earth_2_PAL":["Anubis"],"Deffence_up1":["DrillGame","BlackMetalDragon","HerculesBeetle","HerculesBeetle_Ground"],"PAL_rude":["Gorilla","Gorilla_Ground"],"ElementBoost_Aqua_2_PAL":["Umihebi"],"PAL_ALLAttack_down1":["PinkCat"],"Deffence_up2_2":["VolcanicMonster","VolcanicMonster_Ice","GrassMammoth","GrassMammoth_Ice","SakuraSaurus","SakuraSaurus_Water","Yeti","Yeti_Grass","KingAlpaca","KingAlpaca_Ice","WingGolem","WingGolem_Fire","WhiteShieldDragon","RockBeast","RockBeast_Ice","Plesiosaur","GrassGolem","GrassGolem_Dark","DomeArmorDragon"],"PAL_FullStomach_Up_1":["LazyDragon"],"Legend":["IceHorse","IceHorse_Dark","JetDragon","SaintCentaur","BlackCentaur","PoseidonOrca"],"ElementBoost_Ice_2_PAL":["IceHorse"],"ElementBoost_Dark_2_PAL":["IceHorse_Dark","BlackCentaur"],"ElementBoost_Fire_2_PAL":["KingBahamut"],"EternalFlame":["KingBahamut_Dragon"],"ElementResist_Normal_1_PAL":["PinkLizard"],"ElementBoost_Leaf_2_PAL":["LilyQueen"],"ElementBoost_Dragon_2_PAL":["JetDragon"],"ElementBoost_Normal_2_PAL":["SaintCentaur"],"ElementBoost_Thunder_2_PAL":["ThunderDragonMan"],"Witch":["NightLady_Dark"],"Alien":["DarkAlien","WhiteAlienDragon","DarkMechaDragon"],"Invader":["DarkMechaDragon"],"PAL_sadist":["GrimGirl"],"Salvation":["LegendDeer"],"Nushi":["PoseidonOrca"],"Rare_PAL":["IceHorse","IceHorse_Dark","JetDragon","SaintCentaur","BlackCentaur","PoseidonOrca"]},"WEIGHTS":{"inherit":{"1":4,"2":3,"3":2,"4":1},"random":{"0":4,"1":3,"2":2,"3":1}}}; if(typeof module!=='undefined')module.exports=DATA; else g.DATA=DATA;})(globalThis);
+</script>
+<script>
+/* src/engine.js */
+/* 配种引擎 (Task 2) — 依赖同目录 data.js (Task 1)。
+ * UMD: node 端 module.exports / require('./data.js'); 浏览器端挂全局 ENGINE / 读全局 DATA。 */
+(function (g) {
+  const DATA = typeof module !== 'undefined' ? require('./data.js') : g.DATA;
+
+  const WILDCARD = 'WILDCARD';
+
+  /* ---------- 通用公式 ----------
+   * t = ⌊(rankA + rankB + 1) / 2⌋; 在 PALS 排除 GENERIC_EXCLUDED 后,
+   * 按 (|rank - t|, -pri, isVariant?1:0) 升序取首 (距离并列 → pri 高者胜 → 非变体优先)。
+   * 比较键依赖 t 无法全局预排, 故候选集只预排序一次 (rank 升 / pri 降 / 变体后),
+   * 每次调用做线性取最小, 不做 per-call 全排 (183 候选; 实测 rank 全唯一, 无同 rank 并列)。 */
+  const EXCLUDED = new Set(DATA.GENERIC_EXCLUDED);
+  const CANDIDATES = DATA.PALS
+    .filter((p) => !EXCLUDED.has(p.id))
+    .sort(
+      (x, y) =>
+        x.rank - y.rank ||
+        y.pri - x.pri ||
+        (x.isVariant ? 1 : 0) - (y.isVariant ? 1 : 0)
+    );
+
+  function genericChild(aId, bId) {
+    const ra = DATA.PAL_BY_ID[aId].rank;
+    const rb = DATA.PAL_BY_ID[bId].rank;
+    const t = Math.floor((ra + rb + 1) / 2);
+    let best = null;
+    let bestDist = Infinity;
+    let bestPri = -Infinity;
+    let bestVar = 1;
+    for (const p of CANDIDATES) {
+      const d = Math.abs(p.rank - t);
+      const v = p.isVariant ? 1 : 0;
+      if (
+        d < bestDist ||
+        (d === bestDist &&
+          (p.pri > bestPri || (p.pri === bestPri && v < bestVar)))
+      ) {
+        best = p;
+        bestDist = d;
+        bestPri = p.pri;
+        bestVar = v;
+      }
+    }
+    return best.id;
+  }
+
+  /* ---------- 固定组合 (UNIQUE_COMBOS) ----------
+   * 索引 key: 无序对 "x|y" (两个 id 按 JS 默认字符串比较升序 join)。
+   * 每个 key 至多 2 行 —— 仅 CatMage|FoxMage 有两条性别行, 其余均为单条 WILDCARD 行。
+   * 性别规则: 行的 ga/gb 为 WILDCARD 时匹配任意性别实参; 非 WILDCARD 时要求对应亲代实参精确相等。
+   * 推论 (控制器裁定): 调用方未给性别 (实参 WILDCARD) 时不会命中任何性别行,
+   * 如 childOf('CatMage','FoxMage') 直接落入通用公式; CHILD_OF_PAIR 对该对的取值即公式结果。 */
+  const UNIQUE_BY_PAIR = new Map();
+  for (const row of DATA.UNIQUE_COMBOS) {
+    const key = [row.a, row.b].sort().join('|');
+    if (!UNIQUE_BY_PAIR.has(key)) UNIQUE_BY_PAIR.set(key, []);
+    UNIQUE_BY_PAIR.get(key).push(row);
+  }
+
+  function genderMatch(rowG, argG) {
+    return rowG === WILDCARD || rowG === argG;
+  }
+
+  function matchUnique(rows, aId, bId, genderA, genderB) {
+    for (const r of rows) {
+      // 同向: 行 (a,ga)×(b,gb) 对 实参 (aId,genderA)×(bId,genderB)
+      if (
+        r.a === aId &&
+        r.b === bId &&
+        genderMatch(r.ga, genderA) &&
+        genderMatch(r.gb, genderB)
+      ) {
+        return r.child;
+      }
+      // 反向: 父母无序, 行的 a/b 与实参交叉对应 (性别随亲代一起走)
+      if (
+        r.a === bId &&
+        r.b === aId &&
+        genderMatch(r.ga, genderB) &&
+        genderMatch(r.gb, genderA)
+      ) {
+        return r.child;
+      }
+    }
+    return null;
+  }
+
+  function childOf(aId, bId, genderA = WILDCARD, genderB = WILDCARD) {
+    if (aId === bId) return aId; // 同种自交 → 同种
+    const rows = UNIQUE_BY_PAIR.get([aId, bId].sort().join('|'));
+    if (rows) {
+      const hit = matchUnique(rows, aId, bId, genderA, genderB);
+      if (hit) return hit;
+    }
+    return genericChild(aId, bId);
+  }
+
+  /* ---------- CHILD_OF_PAIR: 全部无序不同种对的预算表 (性别取 WILDCARD), 求解器 O(1) 查表 ----------
+   * key 约定: 两个 id 按 JS 默认字符串比较 (UTF-16 码元) 升序排序后以 "|" 连接;
+   * 升序/降序本可任选, 此处固定升序, 只要确定性即可。共 C(299,2) = 44,551 键。 */
+  const CHILD_OF_PAIR = Object.create(null);
+  const ids = DATA.PALS.map((p) => p.id);
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const key = [ids[i], ids[j]].sort().join('|');
+      CHILD_OF_PAIR[key] = childOf(ids[i], ids[j]);
+    }
+  }
+
+  /* ---------- fillable: 突袭限定 (raid-only) 黑名单不可填充 ---------- */
+  const NOT_FILLABLE = new Set([
+    'NightLady',
+    'NightLady_Dark',
+    'DarkAlien',
+    'WhiteAlienDragon',
+    'DarkMechaDragon',
+    'KingBahamut_Dragon',
+  ]);
+  function fillable(id) {
+    return !NOT_FILLABLE.has(id);
+  }
+
+  const ENGINE = { childOf, genericChild, fillable, CHILD_OF_PAIR };
+  if (typeof module !== 'undefined') module.exports = ENGINE;
+  else g.ENGINE = ENGINE;
+})(globalThis);
+</script>
+<script>
+/* src/solver.js */
+/* 方案求解器 (Task 3) — 依赖同目录 data.js (Task 1) 与 engine.js (Task 2)。
+ * UMD: node 端 module.exports / require; 浏览器端挂全局 SOLVER / 读全局 DATA、ENGINE。
+ *
+ * 核心模型
+ *   状态 = (物种 palId, 目标词条位掩码 mask), 附带聚合值 {steps, fillers, eggs}
+ *   与回溯指针 {parentA, parentB, eggsStep}。聚合值恒等于以该状态为根、
+ *   重复子树重复计数的配种树之和, 因此回溯时直接展开父指针即可, 无需去重。
+ *
+ * 分层扩展 (BFS over 配种步数)
+ *   bucket[i] 存放 steps===i 的状态; 第 T 层组合 bucket[i] × bucket[T-1-i]
+ *   (i ≤ T-1-i), 子代 steps = a.steps+b.steps+1 = T。初始池为第 0 层:
+ *   携带者 (source "carrier", fillers 0) + 每个 fillable 物种一只野生填充
+ *   (mask 0, source "wild", fillers 1) + 缺词条时的虚拟携带者 __unknown__。
+ *
+ * 「万能携带者」假设 (controller ruling 1)
+ *   当没有任何已登记携带者覆盖第 i 个目标词条时, 引入唯一的虚拟状态
+ *   __unknown__ (mask = 全部缺失位, steps/fillers/eggs = 0, source "wild"),
+ *   它代表「待补的野生携带者」: 与任意状态 X 配种时, 子代物种 = X 的物种
+ *   (相当于词条直接嫁接过去), 子代 mask = OR, 正常消耗一步与蛋数。
+ *   这是一个简化假设 — 现实中玩家需要去抓一只带该词条的对应物种;
+ *   UI 需将其展示为「待补携带者」。__unknown__ 只有一份, 不可自交。
+ *
+ * 蛋数估算 (ruling 9, 偏乐观: 只算目标词条, 假定无杂词条干扰)
+ *   每步 n = popcount(maskA|maskB) (= 子代需带的目标词条数 s),
+ *   P = Σ_{k=s}^{4} (w_k/Σw) · C(n-s, k-s)/C(n, k), w = DATA.WEIGHTS.inherit,
+ *   C 为 Pascal 组合数表; s=0 → 该步 eggs=1; 否则 eggs_step = 1/P。
+ *   子代聚合: steps=a.steps+b.steps+1, fillers=a.fillers+b.fillers,
+ *   eggs=a.eggs+b.eggs+eggs_step。保留浮点。
+ *
+ * 去重与剪枝
+ *   dedup (ruling 6): 键 (palId, mask); 若现存态 steps/fillers/eggs 三项全 ≤
+ *     新态则拒绝; 否则替换 (旧对象保留在已有子代的父指针里, 聚合值仍一致)。
+ *   pareto (ruling 7): 每层结束后 (含第 0 层) 按物种分组, 若同种 X 的 mask
+ *     是 Y 的真超集且三项聚合全不劣 → 剪掉 Y (不再参与后续组合)。
+ *
+ * 目标与终止 (rulings 2/4/5)
+ *   早判无解: 目标种不可填充、且不作为任何配对子代出现、且无该种携带者。
+ *   每生成一个 (targetId, fullMask) 子代即收集为候选 (含被 dedup 拒绝的,
+ *   因为聚合值不同的等价键仍是合法备选方案), 上限 256。
+ *   首个候选所在层为 G, 继续跑到 G+1 层后停; maxSteps=6 封顶;
+ *   某层新增状态数为 0 也提前停。携带者若已含 (target, fullMask),
+ *   0 步方案全维度严格最优, 直接返回, 不再跑层搜索列备选。
+ *   最终按 (totalSteps, fillers, totalEggs) 升序取前 3。
+ */
+(function (g) {
+  const DATA = typeof module !== 'undefined' ? require('./data.js') : g.DATA;
+  const ENGINE = typeof module !== 'undefined' ? require('./engine.js') : g.ENGINE;
+
+  const UNKNOWN_ID = '__unknown__';
+
+  /* ---------- 物种索引 (DATA.PALS 顺序); __unknown__ 独占第 N 槽 ---------- */
+  const N = DATA.PALS.length;
+  const SP_IDX = new Map();
+  for (let i = 0; i < N; i++) SP_IDX.set(DATA.PALS[i].id, i);
+  const UNKNOWN_SP = N;
+
+  /* ---------- 一次性预计算 (懒加载, 模块级缓存) ---------- */
+  let _pairTable = null;   // Int16Array N*N: spA*N+spB → 子种索引; 对角 = 自身
+  let _childValues = null; // CHILD_OF_PAIR 全部值的 Set (早判无解用)
+
+  function buildOnce() {
+    if (_pairTable) return;
+    const t = new Int16Array(N * N).fill(-1);
+    const vals = new Set();
+    for (const key in ENGINE.CHILD_OF_PAIR) {
+      const sep = key.indexOf('|');
+      const ia = SP_IDX.get(key.slice(0, sep));
+      const ib = SP_IDX.get(key.slice(sep + 1));
+      const ic = SP_IDX.get(ENGINE.CHILD_OF_PAIR[key]);
+      if (ia === undefined || ib === undefined || ic === undefined) continue;
+      t[ia * N + ib] = ic;
+      t[ib * N + ia] = ic;
+      vals.add(ENGINE.CHILD_OF_PAIR[key]);
+    }
+    for (let i = 0; i < N; i++) t[i * N + i] = i; // 同种自交 → 自身
+    _pairTable = t;
+    _childValues = vals;
+  }
+
+  /* ---------- 蛋数估算: Pascal 表 + 每 n 预计算 (n,k ≤ 4) ---------- */
+  const C = [];
+  for (let n = 0; n <= 4; n++) {
+    C[n] = new Array(5).fill(0);
+    C[n][0] = 1;
+    for (let k = 1; k <= n; k++) C[n][k] = C[n - 1][k - 1] + C[n - 1][k];
+  }
+  const W = DATA.WEIGHTS.inherit; // {'1':4,'2':3,'3':2,'4':1}
+  const W_SUM = W['1'] + W['2'] + W['3'] + W['4'];
+  // s 恒等于 n (子代需带齐并集里的全部目标词条), 故可对 n=0..4 一次性算出
+  const EGG_STEP = [1, 0, 0, 0, 0];
+  for (let n = 1; n <= 4; n++) {
+    const s = n;
+    let P = 0;
+    for (let k = s; k <= 4; k++) {
+      const num = C[n - s][k - s];
+      if (num === 0) continue; // 该 k 项概率为 0 (避免 0/0 → NaN)
+      P += (W[String(k)] / W_SUM) * (num / C[n][k]);
+    }
+    EGG_STEP[n] = 1 / P;
+  }
+  const POP = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4]; // 4bit popcount
+
+  /* ---------- 状态 ----------
+   * {sp, mask, steps, fillers, eggs, source, parentA, parentB, eggsStep, dead}
+   * source ∈ "carrier" | "wild" | "bred"; dead = 被替换或剪掉, 不再参与组合。 */
+
+  function palIdOf(sp) {
+    return sp === UNKNOWN_SP ? UNKNOWN_ID : DATA.PALS[sp].id;
+  }
+
+  /**
+   * planSearch(targetId, passiveIds, carriers, maxSteps=6)
+   *   passiveIds: 去重后的 1~4 个词条 id; bit i ↔ passiveIds[i]
+   *   carriers: [{palId, mask}]
+   *   → {plans: [{steps, totalSteps, fillers, totalEggs}] (≤3), missing: [i]}
+   */
+  function planSearch(targetId, passiveIds, carriers, maxSteps) {
+    buildOnce();
+    if (maxSteps === undefined) maxSteps = 6;
+    const nBits = passiveIds.length;
+    const fullMask = (1 << nBits) - 1;
+
+    /* ---- missing: 所有携带者都不含 bit i → 计入其下标 ---- */
+    const missing = [];
+    for (let i = 0; i < nBits; i++) {
+      const bit = 1 << i;
+      if (!carriers.some((c) => (c.mask & bit) !== 0)) missing.push(i);
+    }
+    let missingMask = 0;
+    for (const i of missing) missingMask |= 1 << i;
+
+    /* ---- 早判无解 (ruling 2): 目标种不可填充 + 非任何配对子代 + 无该种携带者 ---- */
+    const hasTargetCarrier = carriers.some((c) => c.palId === targetId);
+    const reachable =
+      ENGINE.fillable(targetId) || _childValues.has(targetId) || hasTargetCarrier;
+    if (!reachable) return { plans: [], missing };
+
+    const targetSp = SP_IDX.get(targetId);
+    if (targetSp === undefined) return { plans: [], missing };
+
+    /* ---- 已齐: 携带者已有 (target, fullMask) → 0 步方案全维度最优, 不列备选 ---- */
+    if (
+      carriers.some(
+        (c) => c.palId === targetId && (c.mask & fullMask) === fullMask
+      )
+    ) {
+      return {
+        plans: [{ steps: [], totalSteps: 0, fillers: 0, totalEggs: 0 }],
+        missing,
+      };
+    }
+
+    /* ---- 初始池 = 第 0 层 ---- */
+    const map = new Array((N + 1) * 16).fill(null); // key = sp*16+mask → 当前态
+    const buckets = [];
+    for (let i = 0; i <= maxSteps; i++) buckets.push([]);
+
+    function addState(st) {
+      const key = st.sp * 16 + st.mask;
+      const cur = map[key];
+      if (cur) {
+        // 现存态三项全不劣 → 拒绝新态 (ruling 6)
+        if (cur.steps <= st.steps && cur.fillers <= st.fillers && cur.eggs <= st.eggs) {
+          return false;
+        }
+        cur.dead = true; // 替换: 旧对象仅保留在已建子代的父指针里
+      }
+      map[key] = st;
+      if (st.steps <= maxSteps) buckets[st.steps].push(st);
+      return true;
+    }
+
+    function leaf(sp, mask, fillers, source) {
+      return {
+        sp, mask, steps: 0, fillers, eggs: 0,
+        source, parentA: null, parentB: null, eggsStep: 0, dead: false,
+      };
+    }
+
+    for (const c of carriers) {
+      const sp = SP_IDX.get(c.palId);
+      if (sp === undefined) continue; // 未知物种无法参与查表, 忽略
+      addState(leaf(sp, c.mask & fullMask, 0, 'carrier'));
+    }
+    for (let i = 0; i < N; i++) {
+      if (ENGINE.fillable(DATA.PALS[i].id)) addState(leaf(i, 0, 1, 'wild'));
+    }
+    if (missingMask !== 0) addState(leaf(UNKNOWN_SP, missingMask, 0, 'wild'));
+
+    /* ---- 帕累托剪枝 (ruling 7): 同种真超集且三项全不劣 → 剪掉 ---- */
+    function prune() {
+      for (let sp = 0; sp <= N; sp++) {
+        const base = sp * 16;
+        let live = null;
+        for (let m = 0; m <= fullMask; m++) {
+          const st = map[base + m];
+          if (st && !st.dead) (live || (live = [])).push(st);
+        }
+        if (!live || live.length < 2) continue;
+        for (const y of live) {
+          for (const x of live) {
+            if (
+              x !== y &&
+              (x.mask & y.mask) === y.mask &&
+              x.mask !== y.mask &&
+              x.steps <= y.steps &&
+              x.fillers <= y.fillers &&
+              x.eggs <= y.eggs
+            ) {
+              y.dead = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    /* ---- 候选方案 ---- */
+    const candidates = []; // 目标状态对象
+    let G = null; // 首个候选所在层
+
+    /* ---- 第 T 层: 组合 bucket[i] × bucket[T-1-i] (i ≤ T-1-i) ---- */
+    function combineBuckets(i, j, T) {
+      let added = 0;
+      const A = buckets[i];
+      const B = buckets[j];
+      const same = i === j;
+      for (let ai = 0; ai < A.length; ai++) {
+        const a = A[ai];
+        if (a.dead) continue;
+        const bStart = same ? ai : 0;
+        for (let bi = bStart; bi < B.length; bi++) {
+          const b = B[bi];
+          if (b.dead) continue;
+          if (a === b && a.sp === UNKNOWN_SP) continue; // __unknown__ 不可自交
+          let csp;
+          if (a.sp === UNKNOWN_SP) csp = b.sp; // 万能携带者: 子种 = 对方物种
+          else if (b.sp === UNKNOWN_SP) csp = a.sp;
+          else {
+            csp = _pairTable[a.sp * N + b.sp];
+            if (csp < 0) continue;
+          }
+          const cmask = a.mask | b.mask;
+          const st = {
+            sp: csp,
+            mask: cmask,
+            steps: T, // = a.steps + b.steps + 1
+            fillers: a.fillers + b.fillers,
+            eggs: a.eggs + b.eggs + EGG_STEP[POP[cmask]],
+            source: 'bred',
+            parentA: a,
+            parentB: b,
+            eggsStep: EGG_STEP[POP[cmask]],
+            dead: false,
+          };
+          if (addState(st)) added++;
+          // 目标子代即收集 (含被 dedup 拒绝者: 等价键但聚合值不同, 仍是合法方案)
+          if (
+            csp === targetSp &&
+            cmask === fullMask &&
+            candidates.length < 256
+          ) {
+            candidates.push(st);
+            if (G === null) G = T;
+          }
+        }
+      }
+      return added;
+    }
+
+    prune(); // 第 0 层后也要剪 (ruling 7)
+    for (let T = 1; T <= maxSteps; T++) {
+      if (G !== null && T > G + 1) break; // 已收候选: 跑到 G+1 层为止
+      let added = 0;
+      for (let i = 0; i <= T - 1 - i; i++) added += combineBuckets(i, T - 1 - i, T);
+      prune();
+      if (added === 0) break; // 该层无新状态 → 提前停
+    }
+
+    /* ---- 回溯 (ruling 10): DFS 后序展开父指针, 重复子树重复展开 ---- */
+    function stepOf(s) {
+      return { palId: palIdOf(s.sp), mask: s.mask, source: s.source };
+    }
+
+    function reconstruct(root) {
+      const steps = [];
+      (function dfs(s) {
+        if (!s.parentA) return; // carrier / wild / __unknown__ 叶子
+        // 步内双亲排序: palId 升序, 再 mask 升序 (确定性)
+        let p1 = s.parentA;
+        let p2 = s.parentB;
+        const id1 = palIdOf(p1.sp);
+        const id2 = palIdOf(p2.sp);
+        if (id1 > id2 || (id1 === id2 && p1.mask > p2.mask)) {
+          const tmp = p1;
+          p1 = p2;
+          p2 = tmp;
+        }
+        dfs(p1);
+        dfs(p2);
+        steps.push({
+          parentA: stepOf(p1),
+          parentB: stepOf(p2),
+          child: { palId: palIdOf(s.sp), mask: s.mask },
+          eggs: s.eggsStep,
+        });
+      })(root);
+      return steps;
+    }
+
+    const plans = candidates.map((c) => ({
+      steps: reconstruct(c),
+      totalSteps: c.steps,
+      fillers: c.fillers,
+      totalEggs: c.eggs,
+    }));
+    plans.sort(
+      (x, y) =>
+        x.totalSteps - y.totalSteps || x.fillers - y.fillers || x.totalEggs - y.totalEggs
+    );
+    return { plans: plans.slice(0, 3), missing };
+  }
+
+  const SOLVER = { planSearch };
+  if (typeof module !== 'undefined') module.exports = SOLVER;
+  else g.SOLVER = SOLVER;
+})(globalThis);
+</script>
+<script>
+/* src/suggest.js */
+(function(g){
+const DATA=(typeof module!=='undefined')?require('./data.js'):g.DATA;
+
+function dexKey(dex){
+  const s=String(dex==null?'':dex);
+  const n=parseInt(s,10);
+  if(isNaN(n))return 99999;
+  return /[A-Za-z]$/.test(s)?n+0.5:n;
+}
+
+function suggestForPassive(passiveId){
+  const passive=DATA.PASSIVE_BY_ID[passiveId]||null;
+  const ids=DATA.GUARANTEED[passiveId]||[];
+  const guaranteed=ids.map(function(palId){
+    const p=DATA.PAL_BY_ID[palId];
+    if(!p)return null;
+    return {palId:palId,zh:p.zh,dex:p.dex,minLv:p.minLv,maxLv:p.maxLv};
+  }).filter(Boolean).sort(function(a,b){return dexKey(a.dex)-dexKey(b.dex);});
+  return {passive:passive,guaranteed:guaranteed,randomAllowed:passive?!!passive.randomAllowed:false};
+}
+
+function suggestForMissing(passiveIds,missingIdx){
+  return missingIdx.map(function(i){return suggestForPassive(passiveIds[i]);});
+}
+
+const SUGGEST={suggestForPassive:suggestForPassive,suggestForMissing:suggestForMissing};
+if(typeof module!=='undefined')module.exports=SUGGEST; else g.SUGGEST=SUGGEST;
+})(globalThis);
+</script>
+<script>
+/* src/ui.js */
+/* 页面 UI (Task 5) — 依赖全局 DATA / ENGINE / SOLVER / SUGGEST。
+ * 挂载全局 UI; DOMContentLoaded 时 UI.init()。
+ * localStorage: 'palPlanner.v1' → {target, passiveIds, carriers:[{palId, mask}]}
+ * (mask 的第 i 位 ↔ passiveIds[i]) */
+(function (g) {
+  'use strict';
+  const DATA = g.DATA;
+  const ENGINE = g.ENGINE;
+  const SOLVER = g.SOLVER;
+  const SUGGEST = g.SUGGEST;
+
+  const LS_KEY = 'palPlanner.v1';
+  const UNKNOWN_ID = '__unknown__';
+  const CN_NUM = ['零', '一', '二', '三', '四'];
+  const MAX_STEPS = 6; // 与 SOLVER.planSearch 默认一致, 仅用于无解提示文案
+
+  /* ---------- 排序列表 (迭代 DATA.PALS / DATA.PASSIVES, 不用 *_BY_ID, 避免别名) ---------- */
+  function dexKey(dex) {
+    const s = String(dex == null ? '' : dex);
+    const n = parseInt(s, 10);
+    if (isNaN(n)) return 99999;
+    return /[A-Za-z]$/.test(s) ? n + 0.5 : n;
+  }
+  // 目标下拉: 按图鉴号排序 (变体 37B 排在 37 之后)
+  const PALS = DATA.PALS.slice().sort((a, b) => dexKey(a.dex) - dexKey(b.dex));
+  // 词条下拉: rank 降序, 再按中文名
+  const PASSIVES = DATA.PASSIVES.slice().sort(
+    (a, b) => b.rank - a.rank || a.zh.localeCompare(b.zh, 'zh')
+  );
+
+  /* ---------- 显示串 → id 映射 (数据地图) ---------- */
+  function palDisplay(p) {
+    return p.dex + ' ' + p.zh;
+  }
+  const PAL_BY_DISPLAY = new Map();
+  for (const p of PALS) PAL_BY_DISPLAY.set(palDisplay(p), p.id);
+
+  function passiveDisplay(p) {
+    return p.zh + (p.negative ? '（负面）' : '');
+  }
+  const PASSIVE_BY_DISPLAY = new Map();
+  for (const p of PASSIVES) PASSIVE_BY_DISPLAY.set(passiveDisplay(p), p.id);
+
+  /* ---------- DOM ---------- */
+  let elTarget, elPassivesBox, elCarriers, elAdd, elGen, elResults, elErr;
+  const passiveInputs = []; // #passives 内 4 个 .passive-sel
+  const rows = []; // {root, palInput, boxes:[{wrap, box, txt}×4], checked:Set<passiveId>}
+
+  function $(sel) {
+    return document.querySelector(sel);
+  }
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  /* ---------- 当前表单状态 ---------- */
+  // 4 个槽位: 已选词条 id 或 null (无法识别的非空输入也算 null, 生成时再报错)
+  function currentSlots() {
+    return passiveInputs.map((inp) => {
+      const id = PASSIVE_BY_DISPLAY.get(inp.value.trim());
+      return id || null;
+    });
+  }
+  function currentPassiveIds() {
+    return currentSlots().filter(Boolean);
+  }
+
+  /* ---------- 携带者行 ---------- */
+  function refreshRowBits(row) {
+    const slots = currentSlots();
+    row.boxes.forEach((b, i) => {
+      const pid = slots[i];
+      if (pid) {
+        b.wrap.hidden = false; // 未选词条的槽位: 隐藏对应复选框
+        b.txt.textContent = DATA.PASSIVE_BY_ID[pid].zh;
+        b.box.checked = row.checked.has(pid);
+      } else {
+        b.wrap.hidden = true;
+        b.box.checked = false;
+      }
+    });
+  }
+
+  function syncRowChecked(row) {
+    const slots = currentSlots();
+    row.checked.clear();
+    row.boxes.forEach((b, i) => {
+      if (slots[i] && b.box.checked) row.checked.add(slots[i]);
+    });
+  }
+
+  // 目标词条变化: 刷新所有行标签, 清掉已不在目标集里的勾选
+  function refreshAllRows() {
+    const valid = new Set(currentPassiveIds());
+    for (const row of rows) {
+      for (const id of Array.from(row.checked)) {
+        if (!valid.has(id)) row.checked.delete(id);
+      }
+      refreshRowBits(row);
+    }
+  }
+
+  function addCarrierRow(palId, checkedIds) {
+    const root = el('div', 'carrier-row');
+    const palInput = el('input', 'carrier-pal');
+    palInput.type = 'text';
+    palInput.setAttribute('list', 'pal-list');
+    palInput.placeholder = '帕鲁（图鉴号或中文名）';
+    palInput.autocomplete = 'off';
+
+    const bitsWrap = el('span', 'carrier-bits');
+    const boxes = [];
+    for (let i = 0; i < 4; i++) {
+      const lab = el('label', 'bit');
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      const txt = el('span');
+      lab.appendChild(box);
+      lab.appendChild(txt);
+      lab.hidden = true;
+      bitsWrap.appendChild(lab);
+      boxes.push({ wrap: lab, box, txt });
+    }
+
+    const del = el('button', 'del', '删除');
+    del.type = 'button';
+
+    root.appendChild(palInput);
+    root.appendChild(bitsWrap);
+    root.appendChild(del);
+    elCarriers.appendChild(root);
+
+    const row = { root, palInput, boxes, checked: new Set(checkedIds || []) };
+    if (palId && DATA.PAL_BY_ID[palId]) {
+      palInput.value = palDisplay(DATA.PAL_BY_ID[palId]);
+    }
+
+    boxes.forEach((b) => {
+      b.box.addEventListener('change', () => {
+        syncRowChecked(row);
+        save();
+      });
+    });
+    palInput.addEventListener('input', save);
+    del.addEventListener('click', () => {
+      const idx = rows.indexOf(row);
+      if (idx >= 0) rows.splice(idx, 1);
+      root.remove();
+      save();
+    });
+
+    rows.push(row);
+    refreshRowBits(row);
+    return row;
+  }
+
+  /* ---------- localStorage ---------- */
+  function save() {
+    try {
+      const passiveIds = currentPassiveIds();
+      const carriers = rows.map((row) => {
+        let mask = 0;
+        passiveIds.forEach((id, i) => {
+          if (row.checked.has(id)) mask |= 1 << i;
+        });
+        return {
+          palId: PAL_BY_DISPLAY.get(row.palInput.value.trim()) || '',
+          mask,
+        };
+      });
+      const target = PAL_BY_DISPLAY.get(elTarget.value.trim()) || '';
+      localStorage.setItem(LS_KEY, JSON.stringify({ target, passiveIds, carriers }));
+    } catch (e) {
+      /* localStorage 不可用 (隐私模式等) 时静默跳过 */
+    }
+  }
+
+  function restore() {
+    let st = null;
+    try {
+      st = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    } catch (e) {
+      st = null;
+    }
+    if (st && typeof st === 'object') {
+      if (st.target && DATA.PAL_BY_ID[st.target]) {
+        elTarget.value = palDisplay(DATA.PAL_BY_ID[st.target]);
+      }
+      const ids = Array.isArray(st.passiveIds) ? st.passiveIds : [];
+      ids.slice(0, 4).forEach((id, i) => {
+        const p = DATA.PASSIVE_BY_ID[id];
+        if (p && passiveInputs[i]) passiveInputs[i].value = passiveDisplay(p);
+      });
+      const cs = Array.isArray(st.carriers) ? st.carriers : [];
+      for (const c of cs) {
+        if (!c || typeof c !== 'object') continue;
+        const checked = [];
+        ids.forEach((id, i) => {
+          if ((c.mask & (1 << i)) !== 0) checked.push(id);
+        });
+        addCarrierRow(c.palId || '', checked);
+      }
+    }
+    if (rows.length === 0) addCarrierRow('', []);
+    refreshNegatives();
+    refreshAllRows();
+  }
+
+  /* ---------- 负面词条标红 ---------- */
+  function refreshNegatives() {
+    for (const inp of passiveInputs) {
+      const id = PASSIVE_BY_DISPLAY.get(inp.value.trim());
+      const p = id ? DATA.PASSIVE_BY_ID[id] : null;
+      inp.classList.toggle('neg', !!(p && p.negative));
+    }
+  }
+
+  /* ---------- 渲染辅助 ---------- */
+  function palZh(palId) {
+    const p = DATA.PAL_BY_ID[palId];
+    return p ? p.zh : String(palId);
+  }
+
+  function passiveZh(id) {
+    const p = DATA.PASSIVE_BY_ID[id];
+    return p ? p.zh : String(id);
+  }
+
+  function maskZh(mask, passiveIds) {
+    const names = [];
+    passiveIds.forEach((id, i) => {
+      if ((mask & (1 << i)) !== 0) names.push(passiveZh(id));
+    });
+    return names.length ? names.join('+') : '—';
+  }
+
+  function parentText(parent, passiveIds) {
+    if (parent.palId === UNKNOWN_ID) return '⚠ 待补携带者';
+    const name = palZh(parent.palId);
+    const m = '（' + maskZh(parent.mask, passiveIds) + '）';
+    if (parent.source === 'carrier') return '你的 ' + name + m;
+    if (parent.source === 'wild') return '任意 ' + name + m;
+    return name + m; // bred: 由前序步骤配出
+  }
+
+  // 目标种是否出现在任何配对的子代里 (与 SOLVER 早判无解同条件, 懒建一次)
+  let _childValues = null;
+  function childValues() {
+    if (!_childValues) {
+      _childValues = new Set();
+      for (const key in ENGINE.CHILD_OF_PAIR) {
+        _childValues.add(ENGINE.CHILD_OF_PAIR[key]);
+      }
+    }
+    return _childValues;
+  }
+
+  /* ---------- 生成 ---------- */
+  function fail(msg) {
+    elErr.textContent = msg;
+    elResults.innerHTML = '';
+  }
+
+  function generate() {
+    elErr.textContent = '';
+    elResults.innerHTML = '';
+
+    // 1. 目标必选且可识别
+    const targetText = elTarget.value.trim();
+    if (!targetText) return fail('请先选择目标帕鲁。');
+    const targetId = PAL_BY_DISPLAY.get(targetText);
+    if (!targetId) return fail('无法识别的目标帕鲁，请从下拉列表中选择。');
+
+    // 2. 词条 1~4 个且不重复
+    const slots = currentSlots();
+    for (let i = 0; i < 4; i++) {
+      if (!slots[i] && passiveInputs[i].value.trim()) {
+        return fail('第 ' + (i + 1) + ' 个词条无法识别，请从下拉列表中选择。');
+      }
+    }
+    const passiveIds = slots.filter(Boolean);
+    if (passiveIds.length === 0) return fail('请选择 1~4 个目标词条。');
+    for (let i = 0; i < passiveIds.length; i++) {
+      if (passiveIds.indexOf(passiveIds[i]) !== i) {
+        return fail('词条重复：' + passiveZh(passiveIds[i]) + '，请修改后再生成。');
+      }
+    }
+
+    // 3. 携带者: 空行跳过, 同种同 mask 去重 (合并提示)
+    const carriers = [];
+    const seen = new Set();
+    let merged = 0;
+    for (let r = 0; r < rows.length; r++) {
+      const row = rows[r];
+      const txt = row.palInput.value.trim();
+      if (!txt) continue;
+      const pid = PAL_BY_DISPLAY.get(txt);
+      if (!pid) {
+        return fail('第 ' + (r + 1) + ' 行携带者无法识别，请从下拉列表中选择。');
+      }
+      let mask = 0;
+      passiveIds.forEach((id, i) => {
+        if (row.checked.has(id)) mask |= 1 << i;
+      });
+      const key = pid + '#' + mask;
+      if (seen.has(key)) {
+        merged++;
+        continue;
+      }
+      seen.add(key);
+      carriers.push({ palId: pid, mask });
+    }
+
+    // 4. 求解 + 渲染
+    const result = SOLVER.planSearch(targetId, passiveIds, carriers);
+    render(targetId, passiveIds, carriers, result.plans, result.missing, merged);
+  }
+
+  function render(targetId, passiveIds, carriers, plans, missing, merged) {
+    elResults.innerHTML = '';
+
+    if (merged > 0) {
+      elResults.appendChild(
+        el('p', 'notice', '已自动合并 ' + merged + ' 只重复携带者（同种同词条）。')
+      );
+    }
+
+    // 缺词条建议: 先渲染
+    if (missing && missing.length > 0) {
+      elResults.appendChild(el('h3', 'res-title', '缺少携带者的词条'));
+      const sugs = SUGGEST.suggestForMissing(passiveIds, missing);
+      missing.forEach((mi, k) => {
+        const s = sugs[k] || { passive: null, guaranteed: [], randomAllowed: false };
+        const zh = s.passive ? s.passive.zh : passiveZh(passiveIds[mi]); // passive 可能为 null, 防御
+        const card = el('div', 'sug-card');
+        card.appendChild(el('h4', null, '「' + zh + '」获取建议'));
+        if (s.guaranteed && s.guaranteed.length > 0) {
+          for (const gp of s.guaranteed) {
+            const lv =
+              gp.minLv && gp.maxLv
+                ? '野生 Lv ' + gp.minLv + '–' + gp.maxLv
+                : '特殊获取';
+            card.appendChild(
+              el('p', null, '去抓一只 ' + gp.zh + '（' + gp.dex + '，' + lv + '）必带')
+            );
+          }
+        } else if (s.randomAllowed) {
+          card.appendChild(
+            el('p', null, '任何野生帕鲁都可能随机出，建议批量抓低等级帕鲁或配种碰变异')
+          );
+        } else {
+          card.appendChild(
+            el('p', null, '该词条只能来自变异蛋等特殊途径，需先获得任意携带者')
+          );
+        }
+        elResults.appendChild(card);
+      });
+    }
+
+    // 无解: 区分原因
+    if (!plans || plans.length === 0) {
+      const hasTargetCarrier = carriers.some((c) => c.palId === targetId);
+      const reachable =
+        ENGINE.fillable(targetId) || childValues().has(targetId) || hasTargetCarrier;
+      const card = el('div', 'plan-card');
+      if (reachable) {
+        const tip =
+          '无解：' + MAX_STEPS + ' 步配种内凑不齐所选词条 — 试试补充携带者或减少目标词条';
+        // 只有真的渲染了建议卡 (有缺词条) 时才提「上方建议」
+        card.appendChild(
+          el('p', 'warn-line', missing && missing.length > 0 ? tip + '，或按上方建议抓取。' : tip + '。')
+        );
+      } else {
+        card.appendChild(
+          el(
+            'p',
+            'warn-line',
+            '无解：「' + palZh(targetId) + '」只能由同种自交获得，而你还没有该种的携带者 — 请先获得一只「' +
+              palZh(targetId) + '」并录入携带者列表。'
+          )
+        );
+      }
+      elResults.appendChild(card);
+      return;
+    }
+
+    // 方案卡片
+    const count = CN_NUM[Math.min(passiveIds.length, 4)];
+    elResults.appendChild(
+      el(
+        'h3',
+        'res-title',
+        '「' + palZh(targetId) + '」' + count + '词条配种方案（共 ' + plans.length + ' 个）'
+      )
+    );
+    plans.forEach((plan, i) => {
+      const card = el('div', 'plan-card');
+      card.appendChild(el('h4', null, '方案 ' + (i + 1)));
+      if (!plan.steps || plan.steps.length === 0) {
+        card.appendChild(el('p', null, '你已拥有目标帕鲁且四词条齐全，无需孵化'));
+      } else {
+        card.appendChild(
+          el(
+            'p',
+            'plan-meta',
+            '共 ' + plan.totalSteps + ' 步 · 需抓 ' + plan.fillers + ' 只野生填充 · 总预期约 ' +
+              plan.totalEggs.toFixed(1) + ' 蛋'
+          )
+        );
+        const ol = el('ol', 'steps');
+        plan.steps.forEach((st, j) => {
+          const li = el('li');
+          li.textContent =
+            j + 1 + '. ' +
+            parentText(st.parentA, passiveIds) +
+            ' × ' +
+            parentText(st.parentB, passiveIds) +
+            ' → ' +
+            palZh(st.child.palId) +
+            '（' + maskZh(st.child.mask, passiveIds) + '；约 ' + st.eggs.toFixed(1) + ' 蛋）';
+          ol.appendChild(li);
+        });
+        card.appendChild(ol);
+      }
+      elResults.appendChild(card);
+    });
+  }
+
+  /* ---------- 词条下拉 (自绘面板: 红色负面 + buff 描述) ---------- */
+  // 结构: 每个 .passive-sel 输入框外包 .pas-dd, 内挂 .pas-panel(115 条 .pas-opt)。
+  // 输入框仍是唯一状态载体 (值 = passiveDisplay 串), 现有 currentSlots/存档逻辑不变。
+  function buildPassiveDropdowns() {
+    for (const inp of passiveInputs) {
+      const dd = el('div', 'pas-dd');
+      inp.parentNode.insertBefore(dd, inp);
+      dd.appendChild(inp);
+      const panel = el('div', 'pas-panel');
+      panel.hidden = true;
+      const opts = [];
+      for (const p of PASSIVES) {
+        const opt = el('div', 'pas-opt' + (p.negative ? ' neg' : ''));
+        opt.dataset.id = p.id;
+        const name = el('span', 'pas-name', passiveDisplay(p));
+        const desc = el('span', 'pas-desc', p.desc || '');
+        opt.appendChild(name);
+        opt.appendChild(desc);
+        opt.addEventListener('mousedown', (e) => {
+          e.preventDefault(); // 阻止 blur 先触发
+          inp.value = passiveDisplay(p);
+          inp.dispatchEvent(new Event('input', { bubbles: true }));
+          close();
+        });
+        panel.appendChild(opt);
+        opts.push({ opt, p });
+      }
+      dd.appendChild(panel);
+
+      function filter() {
+        const q = inp.value.trim().replace(/（负面）/g, '').toLowerCase();
+        let firstVisible = null;
+        for (const { opt, p } of opts) {
+          const hit =
+            !q ||
+            p.zh.toLowerCase().includes(q) ||
+            (p.desc || '').toLowerCase().includes(q);
+          opt.hidden = !hit;
+          if (hit && !firstVisible) firstVisible = opt;
+        }
+        return firstVisible;
+      }
+      function open() {
+        filter();
+        panel.hidden = false;
+      }
+      function close() {
+        panel.hidden = true;
+      }
+      let blurTimer = 0;
+      inp.addEventListener('focus', () => {
+        clearTimeout(blurTimer); // 重聚焦取消挂起的关闭, 防 blur→focus 竞态
+        open();
+      });
+      inp.addEventListener('input', () => {
+        if (panel.hidden) open();
+        else filter();
+      });
+      inp.addEventListener('blur', () => {
+        blurTimer = setTimeout(close, 120);
+      });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !panel.hidden) {
+          const first = filter();
+          if (first) first.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+          e.preventDefault();
+        } else if (e.key === 'Escape') {
+          close();
+        }
+      });
+    }
+  }
+
+  /* ---------- init ---------- */
+  function init() {
+    elTarget = $('#target');
+    elPassivesBox = $('#passives');
+    elCarriers = $('#carriers');
+    elAdd = $('#add-carrier');
+    elGen = $('#generate');
+    elResults = $('#results');
+    elErr = $('#form-err');
+
+    // 帕鲁 datalist (目标 + 携带者行共用)
+    const palList = $('#pal-list');
+    for (const p of PALS) {
+      const opt = document.createElement('option');
+      opt.value = palDisplay(p);
+      palList.appendChild(opt);
+    }
+
+    const inputs = elPassivesBox.querySelectorAll('.passive-sel');
+    for (const inp of inputs) passiveInputs.push(inp);
+    buildPassiveDropdowns();
+
+    elTarget.addEventListener('input', save);
+    for (const inp of passiveInputs) {
+      inp.addEventListener('input', () => {
+        refreshNegatives();
+        refreshAllRows();
+        save();
+      });
+    }
+    elAdd.addEventListener('click', () => {
+      addCarrierRow('', []);
+      save();
+    });
+    elGen.addEventListener('click', generate);
+
+    restore();
+  }
+
+  const UI = { init };
+  g.UI = UI;
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  }
+})(globalThis);
+</script>
+</body>
+</html>
