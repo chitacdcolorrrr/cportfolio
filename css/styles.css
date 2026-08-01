@@ -20,7 +20,11 @@
     --page-inset: clamp(1.25rem, 3vw, 3rem);
     --scene-blur: clamp(2rem, 4vw, 3.5rem);
     --reveal-blur-at: 0.5s;
-    --card-out-at: 1.2s;
+    --card-settle-at: 0.9s;
+    /* Must match AH_LOADER_BAR_DELAY (1550ms) in index.html. */
+    --loader-in-at: 1.55s;
+    /* Card dissolves only after the loader veil has fully faded (0.05 + 0.5s). */
+    --card-out-at: 0.6s;
     --reveal-sections-at: 2.2s;
     --reveal-step: 0.12s;
     --reveal-meta-at: 3s;
@@ -271,9 +275,9 @@ body::after {
 
 .home-title-card {
     position: fixed;
-    bottom: var(--page-inset);
+    bottom: calc(var(--page-inset) + 2.5rem);
     left: 50%;
-    z-index: 2;
+    z-index: 101;
     margin: 0;
     color: var(--paper);
     font-size: clamp(0.69rem, 0.85vw, 0.78rem);
@@ -288,12 +292,27 @@ body::after {
     pointer-events: none;
 }
 
-.js.intro-ready:not(.intro-skip) .home-title-card {
+/* Boot act one: the wordmark is on the veil from the first frame — focuses
+ * in at screen center, holds a beat, then settles above the progress UI. */
+.js:not(.intro-ready):not(.intro-skip) .home-title-card {
     visibility: visible;
     opacity: 1;
     animation:
-        card-focus 0.6s var(--reveal-ease) backwards,
-        card-dissolve 0.75s ease-in var(--card-out-at) forwards;
+        card-focus 0.55s var(--reveal-ease) backwards,
+        card-settle 0.65s var(--reveal-ease) var(--card-settle-at) backwards;
+}
+
+/* Boot finale: only once the loader veil has fully faded does the card
+ * dissolve into the scene. */
+.js.intro-ready:not(.intro-skip) .home-title-card {
+    visibility: visible;
+    opacity: 1;
+    animation: card-dissolve 0.75s ease-in var(--card-out-at) forwards;
+}
+
+/* Boot act two: the progress UI fades in only after the wordmark settles. */
+.js:not(.intro-skip) .home-page .site-loader-meta {
+    animation: loader-meta-in 0.4s ease var(--loader-in-at) backwards;
 }
 
 .home-main {
@@ -583,6 +602,18 @@ body::after {
     from {
         opacity: 0;
         filter: blur(0.2rem);
+    }
+}
+
+@keyframes card-settle {
+    from {
+        transform: translate(-50%, calc(var(--page-inset) + 2.5rem - 50vh));
+    }
+}
+
+@keyframes loader-meta-in {
+    from {
+        opacity: 0;
     }
 }
 
