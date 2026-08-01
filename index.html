@@ -10,6 +10,9 @@
     <script>
         document.documentElement.classList.add('js');
         window.AH_LOADER_ASSETS = ['/images/home-background.webp?v=20260718-home-1'];
+        // Pre-bar intro: the title card settles at 1.55s (see --loader-in-at
+        // in css/styles.css); the progress chase starts then, not at page start.
+        window.AH_LOADER_BAR_DELAY = 1550;
         window.revealIntroFallback = () => {
             window.clearTimeout(window.introFallbackTimer);
             document.documentElement.classList.add('intro-ready', 'intro-skip');
@@ -26,7 +29,7 @@
     <link rel="stylesheet" href="/css/loader.css?v=20260729-1">
     <link rel="stylesheet" href="/css/styles.css?v=20260729-4">
     <script src="/js/home.js?v=20260729-1" defer onerror="window.revealIntroFallback()"></script>
-    <script src="/js/loader.js?v=20260729-2" defer onerror="window.revealIntroFallback()"></script>
+    <script src="/js/loader.js?v=20260802-1" defer onerror="window.revealIntroFallback()"></script>
 </head>
 <body class="home-page" data-scene="index">
 <div class="home-scene" aria-hidden="true">
