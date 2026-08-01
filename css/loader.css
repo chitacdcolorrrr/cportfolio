@@ -33,10 +33,11 @@
 .site-loader-meta {
     position: absolute;
     bottom: var(--page-inset, clamp(1.25rem, 3vw, 3rem));
-    left: var(--page-inset, clamp(1.25rem, 3vw, 3rem));
+    left: 50%;
+    transform: translateX(-50%);
     display: grid;
     gap: 0.7rem;
-    justify-items: start;
+    justify-items: center;
 }
 
 .site-loader-count {
