@@ -51,7 +51,14 @@
     const fill = loader ? loader.querySelector('.site-loader-fill') : null;
 
     const manifest = Array.isArray(window.AH_LOADER_ASSETS) ? window.AH_LOADER_ASSETS : [];
-    const MIN_TIME = 1100;
+    // Pages with a pre-bar intro (homepage) declare AH_LOADER_BAR_DELAY so the
+    // chase starts when the progress UI fades in — otherwise a fast network
+    // finishes the chase before the bar is ever seen. Must match --loader-in-at
+    // in css/styles.css. Default 0: the counter runs from page start.
+    const BAR_DELAY = Number.isFinite(+window.AH_LOADER_BAR_DELAY)
+        ? +window.AH_LOADER_BAR_DELAY
+        : 0;
+    const MIN_TIME = 1100 + BAR_DELAY;
     const MAX_TIME = 6500;
     const ITEM_TIMEOUT = 5000;
     // Borrowed denominator for assets whose length the server never declares.
@@ -237,6 +244,15 @@
         }
 
         const elapsed = now - startedAt;
+
+        // Pre-bar intro: the progress UI is still off-screen — hold the
+        // display at zero so the chase is seen from its first visible frame.
+        if (elapsed < BAR_DELAY) {
+            render(0);
+            window.requestAnimationFrame(frame);
+            return;
+        }
+
         const target = realProgress();
 
         // Smoothing only: chase the measured value, quickly upward and
