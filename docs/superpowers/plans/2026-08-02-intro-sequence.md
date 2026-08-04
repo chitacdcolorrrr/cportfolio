@@ -1,6 +1,8 @@
 # 首页开场序列改版 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **状态：已完成。** 2026-08-05 补勾全部 checkbox；工作实际于 2026-08-02 完成并提交（c1cd4bc → 7062b0b → 4edb8d2），执行时未逐项勾选。
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 把首页加载阶段改为三段式开机短片：TNYH0330 字标中央登场 → 落底 → 进度条跑条 → 进度条消失后字标模糊淡出，其余动画不变。
 
@@ -33,7 +35,7 @@
 - Consumes: `window.AH_LOADER_BAR_DELAY`（首页内联脚本声明，ms 数字）
 - Produces: loader.js 新行为——`elapsed < BAR_DELAY` 时计数器保持 `000 %` 且不推进 chase；`MIN_TIME = 1100 + BAR_DELAY`。Task 3 的 CSS `--loader-in-at: 1.55s` 依赖这里的 1550 对齐。
 
-- [ ] **Step 1: 启动本地预览服务器（整个计划复用，勿重复启动）**
+- [x] **Step 1: 启动本地预览服务器（整个计划复用，勿重复启动）**
 
 在 worktree 根目录后台启动：
 
@@ -43,11 +45,11 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && python3 -m 
 
 预期：`Serving HTTP on :: port 8137`。若端口被占，换 8138 并在后续步骤替换 URL。
 
-- [ ] **Step 2: 记录改动前基线行为**
+- [x] **Step 2: 记录改动前基线行为**
 
 浏览器打开 `http://localhost:8137/`，观察：计数器从页面加载即开始爬升（左下角），最快约 1.1s 后揭示。这是基线，Task 1 后应看到计数器先冻结再爬升。
 
-- [ ] **Step 3: 修改 loader.js 常量区**
+- [x] **Step 3: 修改 loader.js 常量区**
 
 `js/loader.js` 第 53-58 行，把：
 
@@ -72,7 +74,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && python3 -m 
     const MAX_TIME = 6500;
 ```
 
-- [ ] **Step 4: 修改 frame 循环，BAR_DELAY 期间冻结显示**
+- [x] **Step 4: 修改 frame 循环，BAR_DELAY 期间冻结显示**
 
 `js/loader.js` 的 `frame` 函数里，`const elapsed = now - startedAt;` 之后、`const target = realProgress();` 之前，插入：
 
@@ -86,7 +88,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && python3 -m 
         }
 ```
 
-- [ ] **Step 5: index.html 声明配置**
+- [x] **Step 5: index.html 声明配置**
 
 `index.html` 第 12 行 `window.AH_LOADER_ASSETS = ...;` 之后插入：
 
@@ -96,7 +98,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && python3 -m 
         window.AH_LOADER_BAR_DELAY = 1550;
 ```
 
-- [ ] **Step 6: bump loader.js 版本号（全 5 页）**
+- [x] **Step 6: bump loader.js 版本号（全 5 页）**
 
 5 个 HTML 文件中 `/js/loader.js?v=20260729-2` → `/js/loader.js?v=20260802-1`。可用：
 
@@ -106,7 +108,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && sed -i '' '
 
 验证：`grep -c "loader.js?v=20260802-1" *.html` 应输出每页 1（共 5）。
 
-- [ ] **Step 7: 浏览器验证**
+- [x] **Step 7: 浏览器验证**
 
 硬刷新 `http://localhost:8137/`（DevTools 关缓存或 Cmd+Shift+R）：
 - 计数器显示 `000 %` 冻结约 1.5s，然后开始爬升，到 `100 %` 后揭示
@@ -115,7 +117,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && sed -i '' '
 
 若不符合，检查配置拼写与 frame 插入位置，修复后重验。
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add js/loader.js index.html whoami.html lived.html loved.html created.html && git commit -m "Delay progress chase behind pre-bar intro"
@@ -133,7 +135,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add js/
 - Consumes: 无（纯定位改动）
 - Produces: `.site-loader-meta` 底部居中；Task 3 的字标落点（`bottom: calc(var(--page-inset) + 2.5rem)`）以此为下方锚点。
 
-- [ ] **Step 1: 修改 .site-loader-meta 定位**
+- [x] **Step 1: 修改 .site-loader-meta 定位**
 
 `css/loader.css` 中把：
 
@@ -162,7 +164,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add js/
 }
 ```
 
-- [ ] **Step 2: bump loader.css 版本号（全 5 页）**
+- [x] **Step 2: bump loader.css 版本号（全 5 页）**
 
 ```bash
 cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && sed -i '' 's|/css/loader.css?v=20260729-1|/css/loader.css?v=20260802-1|' index.html whoami.html lived.html loved.html created.html
@@ -170,11 +172,11 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && sed -i '' '
 
 验证：`grep -c "loader.css?v=20260802-1" *.html` 应输出每页 1（共 5）。
 
-- [ ] **Step 3: 浏览器验证**
+- [x] **Step 3: 浏览器验证**
 
 硬刷新 `http://localhost:8137/` 与 `http://localhost:8137/whoami.html`：计数器 + 进度线均在**底部水平居中**。首页此刻仍是旧的"揭示后字标弹入"行为（Task 3 替换），属正常中间态。
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add css/loader.css index.html whoami.html lived.html loved.html created.html && git commit -m "Center boot loader meta"
@@ -194,7 +196,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add css
 - Consumes: Task 1 的 `AH_LOADER_BAR_DELAY = 1550`（与 `--loader-in-at: 1.55s` 对齐）；Task 2 的居中 `.site-loader-meta`
 - Produces: 完整三段式序列。无下游任务。
 
-- [ ] **Step 1: :root 时间变量**
+- [x] **Step 1: :root 时间变量**
 
 `css/styles.css` 中把：
 
@@ -214,7 +216,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add css
     --card-out-at: 0.6s;
 ```
 
-- [ ] **Step 2: 重写 .home-title-card 块**
+- [x] **Step 2: 重写 .home-title-card 块**
 
 `css/styles.css` 中把现有的 `.home-title-card { ... }` 规则和 `.js.intro-ready:not(.intro-skip) .home-title-card { ... }` 规则（第 272-297 行）整体替换为：
 
@@ -264,7 +266,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add css
 
 注意：只动首页；`z-index: 101` 必须高于 `.site-loader` 的 100。
 
-- [ ] **Step 3: 新增 keyframes**
+- [x] **Step 3: 新增 keyframes**
 
 `css/styles.css` 的 `@keyframes card-focus { ... }` 之后插入：
 
@@ -284,7 +286,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add css
 
 `card-settle` 省略 `to`：落点即元素基础 transform（`translateX(-50%)`），动画结束无跳变。`card-focus`、`card-dissolve` 保持原样不删。
 
-- [ ] **Step 4: bump styles.css 版本号（仅首页）**
+- [x] **Step 4: bump styles.css 版本号（仅首页）**
 
 `index.html` 中 `/css/styles.css?v=20260729-4` → `/css/styles.css?v=20260802-1`：
 
@@ -294,7 +296,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && sed -i '' '
 
 验证：`grep -c "styles.css?v=20260802-1" index.html` 应输出 1。
 
-- [ ] **Step 5: 浏览器验证完整序列**
+- [x] **Step 5: 浏览器验证完整序列**
 
 硬刷新 `http://localhost:8137/`，按时间线逐项核对：
 1. 首帧黑场上 TNYH0330 在屏幕中央（略偏上）模糊淡入（0–0.55s）
@@ -306,7 +308,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && sed -i '' '
 
 若字标落点与进度组件间距不协调，微调 `.home-title-card` 的 `bottom` 值（±0.3rem 内）并重验——这是 spec 允许的唯一调参。
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add css/styles.css index.html && git commit -m "Choreograph title card boot entrance"
@@ -323,19 +325,19 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git add css
 - Consumes: Task 1-3 的全部产出
 - Produces: 上线信心；验证通过后交回主会话走 PR 流程（push 到 main = 上线，由用户合并，不在本计划内）
 
-- [ ] **Step 1: Slow 3G 节流验证（实测契约）**
+- [x] **Step 1: Slow 3G 节流验证（实测契约）**
 
 DevTools Network 面板节流 Slow 3G，硬刷新 `http://localhost:8137/`：进度条 1.55s 淡入后停在真实百分比等待字节（可能长时间卡在低位），数字只随真实下载推进，绝不跳到 100；加载完成后序列正常收尾。取消节流。
 
-- [ ] **Step 2: reduced motion 验证（skip 契约）**
+- [x] **Step 2: reduced motion 验证（skip 契约）**
 
 DevTools Rendering 面板勾选 `Emulate CSS media feature prefers-reduced-motion: reduce`，刷新：无开场、无字标、无追逐，页面立即揭示；顶部品牌、导航、铭文全部就位。取消模拟后再验证一次正常路径仍完好。
 
-- [ ] **Step 3: 占位页回归**
+- [x] **Step 3: 占位页回归**
 
 逐个打开 `whoami.html`、`lived.html`、`loved.html`、`created.html`：加载动画底部居中、计数器从 0 立即爬升、揭示后进入占位内容，无字标（字标是首页专属）。
 
-- [ ] **Step 4: 版本号终检**
+- [x] **Step 4: 版本号终检**
 
 ```bash
 cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && grep -n "20260729" *.html; grep -rn "20260802-1" *.html | wc -l
@@ -343,7 +345,7 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && grep -n "20
 
 预期：第一条命令无输出（旧版本号清零）；第二条输出 11（loader.css×5 + loader.js×5 + styles.css×1）。
 
-- [ ] **Step 5: 复查 diff**
+- [x] **Step 5: 复查 diff**
 
 ```bash
 cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git log --oneline main..HEAD && git diff main..HEAD --stat
@@ -351,6 +353,6 @@ cd /Users/qihaohong/Documents/AH/.claude/worktrees/intro-sequence && git log --o
 
 预期：3 个 commit；改动文件为 `js/loader.js`、`css/loader.css`、`css/styles.css`、5 个 HTML，外加 spec/plan 文档。逐文件过一遍 diff，确认没有越界改动（尤其 `MAX_TIME`、兜底计时器、退出过渡、雾气/导航/铭文时间变量未被触碰）。
 
-- [ ] **Step 6: 交回主会话**
+- [x] **Step 6: 交回主会话**
 
 验证全部通过后，向主会话报告：序列实测符合 spec、契约路径全部完好、diff 干净，可以走 push + draft PR 流程。
